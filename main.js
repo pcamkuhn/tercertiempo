@@ -22,39 +22,24 @@ try {
 } catch (e) { console.warn('Supabase not loaded'); }
 
 // ===== 16 EQUIPOS LIGAPRO 2026 =====
+const ESPN_LOGO = 'https://a.espncdn.com/i/teamlogos/soccer/500/';
 const EQUIPOS = {
-    'IDV': { nombre: 'Independiente del Valle', corto: 'IDV', color1: '#000', color2: '#D4A843',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1a1a1a" stroke="#D4A843" stroke-width="2"/><text x="20" y="16" text-anchor="middle" fill="#D4A843" font-size="7" font-weight="bold">IDV</text><polygon points="12,22 20,18 28,22 20,30" fill="#D4A843"/></svg>' },
-    'UCA': { nombre: 'U. Catolica', corto: 'UCA', color1: '#003DA5', color2: '#FCD116',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#003DA5" stroke="#FCD116" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">UC</text><text x="20" y="27" text-anchor="middle" fill="#FCD116" font-size="5">CATOLICA</text></svg>' },
-    'BSC': { nombre: 'Barcelona SC', corto: 'BSC', color1: '#FFD700', color2: '#000',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#FFD700" stroke="#000" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#000" font-size="8" font-weight="bold">BSC</text><text x="20" y="27" text-anchor="middle" fill="#C8102E" font-size="5">GYE</text></svg>' },
-    'AUC': { nombre: 'Aucas', corto: 'AUC', color1: '#FFD700', color2: '#C8102E',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#FFD700" stroke="#C8102E" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#C8102E" font-size="6" font-weight="bold">SD</text><text x="20" y="27" text-anchor="middle" fill="#C8102E" font-size="5">AUCAS</text></svg>' },
-    'CUE': { nombre: 'Dep. Cuenca', corto: 'CUE', color1: '#C8102E', color2: '#FFF',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#C8102E" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">DEP</text><text x="20" y="27" text-anchor="middle" fill="#FFD700" font-size="5">CUENCA</text></svg>' },
-    'TEC': { nombre: 'Tecnico U.', corto: 'TEC', color1: '#800020', color2: '#FFF',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#800020" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="5" font-weight="bold">TECNICO</text><text x="20" y="27" text-anchor="middle" fill="#FFF" font-size="6">U.</text></svg>' },
-    'DLF': { nombre: 'Delfin SC', corto: 'DLF', color1: '#003366', color2: '#87CEEB',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#003366" stroke="#87CEEB" stroke-width="2"/><path d="M14,22 Q20,14 26,22 Q20,18 14,22Z" fill="#87CEEB"/><text x="20" y="30" text-anchor="middle" fill="#FFF" font-size="5">DELFIN</text></svg>' },
-    'MUS': { nombre: 'Mushuc Runa', corto: 'MUS', color1: '#006400', color2: '#FFD700',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#006400" stroke="#FFD700" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFD700" font-size="5" font-weight="bold">MUSHUC</text><text x="20" y="27" text-anchor="middle" fill="#FFF" font-size="5">RUNA</text></svg>' },
-    'LDU': { nombre: 'Liga de Quito', corto: 'LDU', color1: '#FFF', color2: '#002776',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#FFF" stroke="#002776" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#002776" font-size="7" font-weight="bold">LDU</text><text x="20" y="28" text-anchor="middle" fill="#C8102E" font-size="5">QUITO</text></svg>' },
-    'LIB': { nombre: 'Libertad FC', corto: 'LIB', color1: '#1C1C1C', color2: '#C8102E',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1C1C1C" stroke="#C8102E" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="5" font-weight="bold">LIBERTAD</text><text x="20" y="27" text-anchor="middle" fill="#C8102E" font-size="5">FC</text></svg>' },
-    'MAC': { nombre: 'Macara', corto: 'MAC', color1: '#003DA5', color2: '#FFF',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#003DA5" stroke="#FFF" stroke-width="2"/><text x="20" y="22" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">MACARA</text></svg>' },
-    'GCY': { nombre: 'Guayaquil City', corto: 'GCY', color1: '#4169E1', color2: '#FFD700',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#4169E1" stroke="#FFD700" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="5" font-weight="bold">GYE</text><text x="20" y="27" text-anchor="middle" fill="#FFD700" font-size="5">CITY</text></svg>' },
-    'OVA': { nombre: 'Orense SC', corto: 'OVA', color1: '#006400', color2: '#FFD700',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#006400" stroke="#FFD700" stroke-width="2"/><text x="20" y="22" text-anchor="middle" fill="#FFD700" font-size="6" font-weight="bold">ORENSE</text></svg>' },
-    'LDN': { nombre: 'Leones del Norte', corto: 'LDN', color1: '#8B0000', color2: '#FFD700',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#8B0000" stroke="#FFD700" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFD700" font-size="5" font-weight="bold">LEONES</text><text x="20" y="27" text-anchor="middle" fill="#FFF" font-size="4">DEL NORTE</text></svg>' },
-    'EME': { nombre: 'Emelec', corto: 'EME', color1: '#003DA5', color2: '#6CACE4',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#003DA5" stroke="#6CACE4" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="7" font-weight="bold">CS</text><text x="20" y="27" text-anchor="middle" fill="#6CACE4" font-size="5">EMELEC</text></svg>' },
-    'MAN': { nombre: 'Manta FC', corto: 'MAN', color1: '#1B5E20', color2: '#FFF',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1B5E20" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">MANTA</text><text x="20" y="27" text-anchor="middle" fill="#FFD700" font-size="5">FC</text></svg>' }
+    'IDV': { nombre: 'Independiente del Valle', corto: 'IDV', color1: '#000', color2: '#D4A843', logo: ESPN_LOGO + '17086.png' },
+    'UCA': { nombre: 'U. Catolica', corto: 'UCA', color1: '#003DA5', color2: '#FCD116', logo: ESPN_LOGO + '9283.png' },
+    'BSC': { nombre: 'Barcelona SC', corto: 'BSC', color1: '#FFD700', color2: '#000', logo: ESPN_LOGO + '2686.png' },
+    'AUC': { nombre: 'Aucas', corto: 'AUC', color1: '#FFD700', color2: '#C8102E', logo: ESPN_LOGO + '6017.png' },
+    'CUE': { nombre: 'Dep. Cuenca', corto: 'CUE', color1: '#C8102E', color2: '#FFF', logo: ESPN_LOGO + '4812.png' },
+    'TEC': { nombre: 'Tecnico U.', corto: 'TEC', color1: '#800020', color2: '#FFF', logo: ESPN_LOGO + '9292.png' },
+    'DLF': { nombre: 'Delfin SC', corto: 'DLF', color1: '#003366', color2: '#87CEEB', logo: ESPN_LOGO + '1011.png' },
+    'MUS': { nombre: 'Mushuc Runa', corto: 'MUS', color1: '#006400', color2: '#FFD700', logo: ESPN_LOGO + '17176.png' },
+    'LDU': { nombre: 'Liga de Quito', corto: 'LDU', color1: '#FFF', color2: '#002776', logo: ESPN_LOGO + '4816.png' },
+    'LIB': { nombre: 'Libertad FC', corto: 'LIB', color1: '#1C1C1C', color2: '#C8102E', logo: ESPN_LOGO + '21843.png' },
+    'MAC': { nombre: 'Macara', corto: 'MAC', color1: '#003DA5', color2: '#FFF', logo: ESPN_LOGO + '18439.png' },
+    'GCY': { nombre: 'Guayaquil City', corto: 'GCY', color1: '#4169E1', color2: '#FFD700', logo: ESPN_LOGO + '11124.png' },
+    'OVA': { nombre: 'Orense SC', corto: 'OVA', color1: '#006400', color2: '#FFD700', logo: ESPN_LOGO + '20695.png' },
+    'LDN': { nombre: 'Leones del Norte', corto: 'LDN', color1: '#8B0000', color2: '#FFD700', logo: ESPN_LOGO + '131702.png' },
+    'EME': { nombre: 'Emelec', corto: 'EME', color1: '#003DA5', color2: '#6CACE4', logo: ESPN_LOGO + '2668.png' },
+    'MAN': { nombre: 'Manta FC', corto: 'MAN', color1: '#1B5E20', color2: '#FFF', logo: ESPN_LOGO + '10307.png' }
 };
 
 // ===== DATOS FALLBACK — LigaPro 2026 Fecha 8 (12 Abril) =====
@@ -395,7 +380,7 @@ function renderStandings() {
         const dgStr = t.dg > 0 ? '+' + t.dg : t.dg;
         return '<tr class="' + zoneClass + '">' +
             '<td class="col-pos">' + pos + '</td>' +
-            '<td class="col-team"><div class="team-cell"><div class="team-badge">' + equipo.svg + '</div><span class="team-name">' + equipo.nombre + '</span></div></td>' +
+            '<td class="col-team"><div class="team-cell"><div class="team-badge"><img src="' + equipo.logo + '" alt="' + equipo.corto + '" onerror="this.outerHTML=\'<span class=badge-fallback>' + equipo.corto + '</span>\'"></div><span class="team-name">' + equipo.nombre + '</span></div></td>' +
             '<td class="col-stat">' + t.pj + '</td>' +
             '<td class="col-stat">' + t.g + '</td>' +
             '<td class="col-stat">' + t.e + '</td>' +
@@ -468,13 +453,13 @@ function renderProde() {
         const local = EQUIPOS[match.local] || { svg: '', corto: match.local };
         const visitante = EQUIPOS[match.visitante] || { svg: '', corto: match.visitante };
         return '<div class="prode-match">' +
-            '<div class="prode-team home"><div class="team-badge">' + local.svg + '</div><span>' + local.corto + '</span></div>' +
+            '<div class="prode-team home"><div class="team-badge"><img src="' + local.logo + '" alt="' + local.corto + '"></div><span>' + local.corto + '</span></div>' +
             '<div class="prode-score">' +
             '<input type="number" min="0" max="20" class="prode-input" data-match="' + i + '" data-side="home" placeholder="-">' +
             '<span class="prode-vs">vs</span>' +
             '<input type="number" min="0" max="20" class="prode-input" data-match="' + i + '" data-side="away" placeholder="-">' +
             '</div>' +
-            '<div class="prode-team away"><span>' + visitante.corto + '</span><div class="team-badge">' + visitante.svg + '</div></div></div>';
+            '<div class="prode-team away"><span>' + visitante.corto + '</span><div class="team-badge"><img src="' + visitante.logo + '" alt="' + visitante.corto + '"></div></div></div>';
     }).join('');
 
     document.getElementById('btnGuardarProde')?.addEventListener('click', guardarPronosticos);
@@ -542,14 +527,7 @@ function initAuth() {
         if (e.target.id === 'authModal') closeAuthModal();
     });
 
-    const select = document.getElementById('selectEquipo');
-    if (select) {
-        Object.entries(EQUIPOS).forEach(([id, eq]) => {
-            const opt = document.createElement('option');
-            opt.value = id; opt.textContent = eq.nombre;
-            select.appendChild(opt);
-        });
-    }
+    // selectEquipo options are now in the HTML (including Hincha neutral and Otro equipo)
 }
 
 function openAuthModal(mode) {
@@ -559,6 +537,7 @@ function openAuthModal(mode) {
     document.getElementById('btnAuthSubmit').textContent = mode === 'login' ? 'Entrar' : 'Registrarme';
     document.getElementById('registerNameGroup').classList.toggle('hidden', mode === 'login');
     document.getElementById('registerTeamGroup').classList.toggle('hidden', mode === 'login');
+    if (mode === 'login') document.getElementById('equipoManualGroup').style.display = 'none';
     document.getElementById('modalSwitchText').textContent = mode === 'login' ? 'No tienes cuenta?' : 'Ya tienes cuenta?';
     document.getElementById('modalSwitchLink').textContent = mode === 'login' ? 'Registrate' : 'Inicia sesion';
     m.classList.remove('hidden');
@@ -572,7 +551,11 @@ async function handleAuth(e) {
     if (!email || !password) { showToast('Completa email y contrasena'); return; }
 
     if (!supabaseClient) {
-        currentUser = { id: 'demo', email, nombre: email.split('@')[0], equipo: 'BSC' };
+        const demoNombre = document.getElementById('inputNombreHincha')?.value || email.split('@')[0];
+        let demoEquipo = document.getElementById('selectEquipo')?.value || 'BSC';
+        const demoManual = document.getElementById('inputEquipoManual')?.value.trim();
+        if (demoEquipo === '_otro' && demoManual) demoEquipo = demoManual;
+        currentUser = { id: 'demo', email, nombre: demoNombre, equipo: demoEquipo || 'BSC' };
         onLogin(currentUser); closeAuthModal();
         showToast('Bienvenido, ' + currentUser.nombre + '. (modo demo)');
         return;
@@ -587,15 +570,18 @@ async function handleAuth(e) {
             showToast('Bienvenido, ' + currentUser.nombre + '.');
         } else {
             const nombre = document.getElementById('inputNombreHincha').value;
-            const equipo = document.getElementById('selectEquipo').value;
+            let equipo = document.getElementById('selectEquipo').value;
+            const equipoManual = document.getElementById('inputEquipoManual')?.value.trim();
+            if (equipo === '_otro' && equipoManual) equipo = equipoManual;
+            if (!equipo) equipo = 'NEUTRAL';
             const { data, error } = await supabaseClient.auth.signUp({ email, password });
             if (error) throw error;
             if (data.user) {
                 await supabaseClient.from('perfiles').insert({
                     id: data.user.id, nombre: nombre || email.split('@')[0],
-                    equipo: equipo || 'BSC', partidos_estadio: 0
+                    equipo: equipo, partidos_estadio: 0
                 });
-                currentUser = { id: data.user.id, email, nombre: nombre || email.split('@')[0], equipo: equipo || 'BSC' };
+                currentUser = { id: data.user.id, email, nombre: nombre || email.split('@')[0], equipo: equipo };
                 onLogin(currentUser); closeAuthModal();
                 showToast('Cuenta creada. Bienvenido, ' + currentUser.nombre + '.');
             }
@@ -689,26 +675,43 @@ function initLigas() {
     loadLigas();
 }
 
+// Local storage for ligas when Supabase tables don't exist
+let localLigas = [];
+
 async function crearLiga(e) {
     e.preventDefault();
+    if (!currentUser) { showToast('Inicia sesion para crear una liga'); openAuthModal('login'); return; }
     const nombre = document.getElementById('inputNombreLiga').value.trim();
     if (!nombre) return;
     const codigo = generarCodigo();
-    if (supabaseClient && currentUser) {
+    let success = false;
+
+    if (supabaseClient) {
         try {
             const { data, error } = await supabaseClient.from('ligas').insert({
                 nombre, codigo, creador_id: currentUser.id, created_at: new Date().toISOString()
             }).select().single();
             if (error) throw error;
             await supabaseClient.from('liga_miembros').insert({ liga_id: data.id, user_id: currentUser.id });
-            showToast('Liga creada. Codigo: ' + codigo);
-            document.getElementById('crearLigaModal')?.classList.add('hidden');
-            document.getElementById('inputNombreLiga').value = '';
-            loadLigas();
-        } catch (err) { showToast('Error al crear liga'); console.error(err); }
+            success = true;
+        } catch (err) {
+            console.warn('Supabase ligas insert failed, using local storage:', err);
+            // Fallback to local
+            const liga = { id: 'local_' + Date.now(), nombre, codigo, creador_id: currentUser.id };
+            localLigas.push(liga);
+            success = true;
+        }
     } else {
-        showToast('Liga "' + nombre + '" creada (demo). Codigo: ' + codigo);
+        const liga = { id: 'local_' + Date.now(), nombre, codigo, creador_id: currentUser.id };
+        localLigas.push(liga);
+        success = true;
+    }
+
+    if (success) {
+        showToast('Liga "' + nombre + '" creada. Codigo: ' + codigo);
         document.getElementById('crearLigaModal')?.classList.add('hidden');
+        document.getElementById('inputNombreLiga').value = '';
+        loadLigas();
     }
 }
 
@@ -729,19 +732,34 @@ async function unirseLiga() {
 }
 
 async function loadLigas() {
-    if (!supabaseClient || !currentUser) return;
+    if (!currentUser) return;
     const container = document.getElementById('ligasList');
     if (!container) return;
-    try {
-        const { data: memberships } = await supabaseClient.from('liga_miembros')
-            .select('liga_id, ligas(id, nombre, codigo)').eq('user_id', currentUser.id);
-        if (memberships && memberships.length > 0) {
-            container.innerHTML = memberships.map(m => {
-                const l = m.ligas;
-                return '<div class="liga-card"><div class="liga-card-info"><h4>' + l.nombre + '</h4><p>Codigo: ' + l.codigo + '</p></div><span class="liga-card-members">&#8594;</span></div>';
-            }).join('');
-        }
-    } catch (e) { console.warn('Ligas load error:', e); }
+    let allLigas = [];
+
+    // Try Supabase first
+    if (supabaseClient) {
+        try {
+            const { data: memberships } = await supabaseClient.from('liga_miembros')
+                .select('liga_id, ligas(id, nombre, codigo)').eq('user_id', currentUser.id);
+            if (memberships && memberships.length > 0) {
+                allLigas = memberships.map(m => m.ligas).filter(Boolean);
+            }
+        } catch (e) { console.warn('Ligas load from Supabase failed:', e); }
+    }
+
+    // Add local ligas
+    localLigas.forEach(l => {
+        if (!allLigas.find(x => x.codigo === l.codigo)) allLigas.push(l);
+    });
+
+    if (allLigas.length > 0) {
+        container.innerHTML = allLigas.map(l =>
+            '<div class="liga-card"><div class="liga-card-info"><h4>' + l.nombre + '</h4><p>Codigo: ' + l.codigo + '</p></div><span class="liga-card-members">&#8594;</span></div>'
+        ).join('');
+    } else {
+        container.innerHTML = '<div class="empty-state-sm">No tienes ligas aun. Crea una o unete con un codigo.</div>';
+    }
 }
 
 function generarCodigo() {
@@ -774,6 +792,15 @@ function updateRivalSelect() {
             opt.value = id; opt.textContent = eq.nombre;
             select.appendChild(opt);
         }
+    });
+    // Add manual entry option for teams not in the list
+    const optManual = document.createElement('option');
+    optManual.value = '_manual'; optManual.textContent = '— Otro equipo (escribir) —';
+    select.appendChild(optManual);
+    // Toggle manual rival input visibility
+    select.addEventListener('change', () => {
+        const manualGroup = document.getElementById('rivalManualGroup');
+        if (manualGroup) manualGroup.style.display = select.value === '_manual' ? '' : 'none';
     });
 }
 
@@ -871,16 +898,20 @@ async function registrarManual(e) {
     const miEquipo = currentUser.equipo || 'BSC';
     const fecha = document.getElementById('inputFechaPartido').value;
     const jornada = parseInt(document.getElementById('inputJornadaPartido').value) || null;
+    const tipoTorneo = document.getElementById('selectTipoTorneo')?.value || 'LigaPro';
     const esLocal = document.getElementById('selectLocalVisitante').value === 'local';
     const rival = document.getElementById('selectRival').value;
+    const rivalManual = document.getElementById('inputRivalManual')?.value.trim() || '';
+    const rivalFinal = rival === '_manual' ? rivalManual : rival;
     const miGol = parseInt(document.getElementById('inputGolesMi').value);
     const rivalGol = parseInt(document.getElementById('inputGolesRival').value);
 
     if (!fecha || isNaN(miGol) || isNaN(rivalGol)) { showToast('Completa todos los campos'); return; }
+    if (rival === '_manual' && !rivalManual) { showToast('Escribe el nombre del rival'); return; }
 
     const resultado = miGol > rivalGol ? 'W' : miGol < rivalGol ? 'L' : 'D';
-    const local = esLocal ? miEquipo : rival;
-    const visitante = esLocal ? rival : miEquipo;
+    const local = esLocal ? miEquipo : rivalFinal;
+    const visitante = esLocal ? rivalFinal : miEquipo;
     const gl = esLocal ? miGol : rivalGol;
     const gv = esLocal ? rivalGol : miGol;
 
@@ -889,7 +920,8 @@ async function registrarManual(e) {
         equipo_local: local, equipo_visitante: visitante,
         gol_local: gl, gol_visitante: gv,
         mi_equipo: miEquipo, es_local: esLocal,
-        resultado, rival,
+        resultado, rival: rivalFinal,
+        tipo_torneo: tipoTorneo,
         created_at: new Date().toISOString()
     };
 

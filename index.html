@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TercerTiempo â FÃºtbol Ecuatoriano</title>
+    <title>TercerTiempo ⚽ Fútbol Ecuatoriano</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -11,15 +11,14 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-    <!-- Header -->
     <header class="app-header">
         <div class="header-content">
             <div class="logo">
-                <span class="logo-icon">â½</span>
+                <span class="logo-icon">⚽</span>
                 <h1>TercerTiempo</h1>
             </div>
             <div class="auth-area" id="authArea">
-                <button class="btn btn-outline" id="btnLogin">Iniciar SesiÃ³n</button>
+                <button class="btn btn-outline" id="btnLogin">Iniciar Sesión</button>
                 <button class="btn btn-primary" id="btnRegister">Registrarse</button>
             </div>
             <div class="user-area hidden" id="userArea">
@@ -29,58 +28,60 @@
         </div>
     </header>
 
-    <!-- Navigation Tabs -->
     <nav class="tab-nav">
         <div class="tab-nav-inner">
             <button class="tab-btn active" data-tab="tabla">
-                <span class="tab-icon">ð</span>
+                <span class="tab-icon">🏆</span>
                 <span class="tab-label">Tabla</span>
             </button>
             <button class="tab-btn" data-tab="estadisticas">
-                <span class="tab-icon">ð</span>
-                <span class="tab-label">EstadÃ­sticas</span>
+                <span class="tab-icon">📊</span>
+                <span class="tab-label">Stats</span>
             </button>
             <button class="tab-btn" data-tab="prode">
-                <span class="tab-icon">ð¯</span>
+                <span class="tab-icon">🏯</span>
                 <span class="tab-label">Prode</span>
             </button>
             <button class="tab-btn" data-tab="ligas">
-                <span class="tab-icon">ð¥</span>
+                <span class="tab-icon">👥</span>
                 <span class="tab-label">Ligas</span>
             </button>
             <button class="tab-btn" data-tab="hinchas">
-                <span class="tab-icon">ð</span>
-                <span class="tab-label">Hinchas</span>
+                <span class="tab-icon">🏟️</span>
+                <span class="tab-label">Estadio</span>
             </button>
             <button class="tab-btn" data-tab="perfil">
-                <span class="tab-icon">ð¤</span>
-                <span class="tab-label">Mi Perfil</span>
+                <span class="tab-icon">👤</span>
+                <span class="tab-label">Perfil</span>
             </button>
         </div>
     </nav>
 
-    <!-- Tab Contents -->
     <main class="main-content">
 
         <!-- TAB 1: TABLA DE POSICIONES -->
         <section class="tab-content active" id="tab-tabla">
             <div class="section-header">
                 <h2>Tabla LigaPro 2026</h2>
-                <div class="badge">Fecha 8 â 13 Abril</div>
+                <div class="header-right">
+                    <div class="badge" id="fechaBadge">Fecha 8</div>
+                    <button class="btn btn-icon" id="btnRefreshStandings" title="Actualizar datos">🔄</button>
+                </div>
             </div>
+            <div class="data-status" id="dataStatus"></div>
 
             <div class="phase-info">
                 <div class="phase-card libertadores">
                     <span class="phase-dot"></span>
-                    <span>Hexagonal TÃ­tulo (1Â°-6Â°)</span>
+            <span>Hexagonal Título (1°-6°)</span>
                 </div>
                 <div class="phase-card sudamericana">
                     <span class="phase-dot"></span>
-                    <span>Cuadrangular Sudamericana (7Â°-10Â°)</span>
+                    <span>Cuadrangular Sudamericana (7°-10°)</span>
                 </div>
-                <div class="phase-card normal">
+                <div class="phase-card descenso">
                     <span class="phase-dot"></span>
-                    <span>Hexagonal No Descenso (11Â°-16Â°)</span>
+                    <span>Hexagonal No Descenso (11°-16°)</span>
                 </div>
             </div>
 
@@ -97,41 +98,34 @@
                             <th class="col-stat">GF</th>
                             <th class="col-stat">GC</th>
                             <th class="col-stat">DG</th>
-                            <th class="col-pts">PTS</th>
+                            <th class="col-stat">PTS</th>
                         </tr>
                     </thead>
-                    <tbody id="standingsBody">
-                        <!-- Filled by JS -->
-                    </tbody>
+                    <tbody id="standingsBody"></tbody>
                 </table>
             </div>
         </section>
 
-        <!-- TAB 2: ESTADÃSTICAS -->
+        <!-- TAB 2: ESTADÍSTICAS -->
         <section class="tab-content" id="tab-estadisticas">
             <div class="section-header">
-                <h2>EstadÃ­sticas LigaPro 2026</h2>
+                <h2>Estadísticas LigaPro 2026</h2>
             </div>
-
             <div class="stats-grid">
-                <!-- Goleadores -->
                 <div class="stats-card">
-                    <h3>â½ Goleadores</h3>
+                    <h3>⚽ Goleadores</h3>
                     <div class="stats-list" id="goleadoresList"></div>
                 </div>
-                <!-- Asistencias -->
                 <div class="stats-card">
-                    <h3>ð¯ Asistencias</h3>
+                    <h3>🏯 Asistencias</h3>
                     <div class="stats-list" id="asistenciasList"></div>
                 </div>
-                <!-- Mejor Ataque -->
                 <div class="stats-card">
-                    <h3>ð¥ Mejor Ataque</h3>
+                    <h3>💥 Mejor Ataque</h3>
                     <div class="stats-list" id="ataqueList"></div>
                 </div>
-                <!-- Mejor Defensa -->
                 <div class="stats-card">
-                    <h3>ð¡ï¸ Mejor Defensa</h3>
+                    <h3>🛡️ Mejor Defensa</h3>
                     <div class="stats-list" id="defensaList"></div>
                 </div>
             </div>
@@ -139,26 +133,36 @@
 
         <!-- TAB 3: PRODE GLOBAL -->
         <section class="tab-content" id="tab-prode">
-            <div class="section-header">
-                <h2>Prode Global â Jornada 9</h2>
-                <div class="badge">+1pt resultado Â· +3pts exacto</div>
+            <!-- Auth Gate -->
+            <div class="prode-gate" id="prodeGate">
+                <div class="gate-content">
+                    <span class="gate-icon">🔒</span>
+                    <h3>Inicia sesión para jugar al Prode</h3>
+                    <p>Predice los resultados de cada jornada y compite con todos los hinchas</p>
+                    <div class="gate-scoring">
+                        <span class="gate-score-item">+1 pt resultado correcto</span>
+                        <span class="gate-score-item">+3 pts marcador exacto</span>
+                    </div>
+                    <button class="btn btn-primary btn-lg" id="btnProdeLogin">Iniciar Sesión</button>
+                    <p class="gate-register">¿No tienes cuenta? <a href="#" id="btnProdeRegister">Regístrate gratis</a></p>
+                </div>
             </div>
 
-            <div class="prode-grid" id="prodeGrid">
-                <!-- Filled by JS -->
-            </div>
-
-            <div class="prode-actions">
-                <button class="btn btn-primary btn-lg" id="btnGuardarProde">
-                    ð¾ Guardar PronÃ³sticos
-                </button>
-                <p class="prode-note">Visible para todos. Guardar requiere cuenta.</p>
-            </div>
-
-            <div class="prode-ranking">
-                <h3>ð Ranking Global</h3>
-                <div class="ranking-list" id="rankingList">
-                    <div class="ranking-empty">Inicia sesiÃ³n para ver el ranking</div>
+            <!-- Prode Content (hidden until login) -->
+            <div class="prode-content hidden" id="prodeContent">
+                <div class="section-header">
+                    <h2>Prode Global — <span id="prodeJornada">Jornada 9</span></h2>
+                    <div class="badge">+1pt resultado · +3pts exacto</div>
+                </div>
+                <div class="prode-grid" id="prodeGrid"></div>
+                <div class="prode-actions">
+                    <button class="btn btn-primary btn-lg" id="btnGuardarProde">💾 Guardar Pronósticos</button>
+                </div>
+                <div class="prode-ranking">
+                    <h3>🏅 Ranking Global</h3>
+                    <div class="ranking-list" id="rankingList">
+                        <div class="ranking-empty">Juega al menos una jornada para ver el ranking</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -168,49 +172,152 @@
             <div class="section-header">
                 <h2>Ligas Privadas</h2>
             </div>
-
             <div class="ligas-actions">
-                <button class="btn btn-primary" id="btnCrearLiga">â Crear Liga</button>
+                <button class="btn btn-primary" id="btnCrearLiga">➕ Crear Liga</button>
                 <div class="join-liga">
-                    <input type="text" placeholder="CÃ³digo de liga" id="inputCodigoLiga" class="input-field">
+                    <input type="text" placeholder="Código de liga" id="inputCodigoLiga" class="input-field">
                     <button class="btn btn-outline" id="btnUnirseLiga">Unirse</button>
                 </div>
             </div>
-
             <div class="ligas-list" id="ligasList">
                 <div class="empty-state">
-                    <span class="empty-icon">ðï¸</span>
-                    <p>Crea o Ãºnete a una liga para competir con tus panas</p>
+                    <span class="empty-icon">🏟️</span>
+                    <p>Crea o únete a una liga para competir con tus panas</p>
                 </div>
             </div>
-
-            <!-- Liga Detail (hidden by default) -->
             <div class="liga-detail hidden" id="ligaDetail">
-                <button class="btn btn-outline btn-sm" id="btnVolverLigas">â Volver</button>
+                <button class="btn btn-outline btn-sm" id="btnVolverLigas">← Volver</button>
                 <div class="liga-header" id="ligaHeader"></div>
-                <div class="liga-tabs">
-                    <button class="liga-tab-btn active" data-ligatab="tabla">Tabla</button>
-                    <button class="liga-tab-btn" data-ligatab="chat">Chat</button>
-                    <button class="liga-tab-btn" data-ligatab="trofeos">Trofeos</button>
-                </div>
                 <div class="liga-tab-content" id="ligaTabContent"></div>
             </div>
         </section>
 
-        <!-- TAB 5: HINCHAS -->
+        <!-- TAB 5: MI ESTADIO (HINCHAS) -->
         <section class="tab-content" id="tab-hinchas">
-            <div class="section-header">
-                <h2>Comunidad Hincha</h2>
+            <!-- Auth gate for hinchas too -->
+            <div class="hinchas-gate" id="hinchasGate">
+                <div class="gate-content">
+                    <span class="gate-icon">🏟️</span>
+                    <h3>Registra tus idas al estadio</h3>
+                    <p>Lleva un registro de cada partido que asistes, tus victorias, empates y derrotas</p>
+                    <button class="btn btn-primary btn-lg" id="btnHinchasLogin">Iniciar Sesión</button>
+                </div>
             </div>
 
-            <div class="hinchas-search">
-                <input type="text" placeholder="Buscar hincha por nombre..." id="inputBuscarHincha" class="input-field">
-            </div>
+            <div class="hinchas-content hidden" id="hinchasContent">
+                <div class="section-header">
+                    <h2>🏟️ Mi Registro de Estadio</h2>
+                </div>
 
-            <div class="hinchas-grid" id="hinchasGrid">
-                <div class="empty-state">
-                    <span class="empty-icon">ð</span>
-                    <p>Explora la comunidad de hinchas</p>
+                <!-- Stats Dashboard -->
+                <div class="estadio-stats-grid" id="estadioStatsGrid">
+                    <div class="estadio-stat-card total">
+                        <span class="estadio-stat-num" id="statTotal">0</span>
+                        <span class="estadio-stat-label">Partidos</span>
+                    </div>
+                    <div class="estadio-stat-card wins">
+                        <span class="estadio-stat-num" id="statWins">0</span>
+                        <span class="estadio-stat-label">Victorias</span>
+                    </div>
+                    <div class="estadio-stat-card draws">
+                        <span class="estadio-stat-num" id="statDraws">0</span>
+                        <span class="estadio-stat-label">Empates</span>
+                    </div>
+                    <div class="estadio-stat-card losses">
+                        <span class="estadio-stat-num" id="statLosses">0</span>
+                        <span class="estadio-stat-label">Derrotas</span>
+                    </div>
+                </div>
+
+                <!-- Win Rate Bar -->
+                <div class="win-rate-container">
+                    <div class="win-rate-bar" id="winRateBar">
+                        <div class="wr-segment wr-wins" id="wrWins" style="width:0%"></div>
+                        <div class="wr-segment wr-draws" id="wrDraws" style="width:0%"></div>
+                        <div class="wr-segment wr-losses" id="wrLosses" style="width:0%"></div>
+                    </div>
+                    <div class="win-rate-labels">
+                        <span class="wr-label wins" id="wrWinPct">0%</span>
+                        <span class="wr-label draws" id="wrDrawPct">0%</span>
+                        <span class="wr-label losses" id="wrLossPct">0%</span>
+                    </div>
+                </div>
+
+                <!-- Saladez Meter -->
+                <div class="saladez-card">
+                    <h4>🧂 Medidor de Saladez</h4>
+                    <div class="saladez-meter">
+                        <div class="saladez-bar"><div class="saladez-fill" id="saladezFill" style="width: 0%"></div></div>
+                        <span class="saladez-label" id="saladezLabel">Registra partidos para ver tu nivel</span>
+                    </div>
+                    <div class="veredicto-box" id="veredictoBox">
+                        <p class="veredicto-text" id="veredictoText">Asiste a partidos para recibir tu veredicto</p>
+                    </div>
+                </div>
+
+                <!-- Register Buttons -->
+                <div class="registro-actions">
+                    <button class="btn btn-primary" id="btnRegistrarJornada">📋 Registrar de Jornada Pasada</button>
+                    <button class="btn btn-outline" id="btnRegistrarManual">✏️ Registro Manual</button>
+                </div>
+
+                <!-- Past Matches List (for jornada selection) -->
+                <div class="past-matches hidden" id="pastMatchesPanel">
+                    <h4>Selecciona los partidos que asististe</h4>
+                    <p class="past-matches-sub">Mostrando partidos de <span id="miEquipoNombre">tu equipo</span></p>
+                    <div class="past-matches-list" id="pastMatchesList"></div>
+                    <button class="btn btn-outline btn-sm" id="btnCerrarJornadas">Cerrar</button>
+                </div>
+
+                <!-- Manual Registration Form -->
+                <div class="manual-form hidden" id="manualFormPanel">
+                    <h4>Registrar asistencia manual</h4>
+                    <form id="manualAsistenciaForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Fecha</label>
+                                <input type="date" id="inputFechaPartido" class="input-field" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Jornada (opcional)</label>
+                                <input type="number" id="inputJornadaPartido" class="input-field" min="1" max="30" placeholder="Ej: 5">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Mi equipo jugó de</label>
+                                <select id="selectLocalVisitante" class="input-field">
+                                    <option value="local">Local</option>
+                                    <option value="visitante">Visitante</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Rival</label>
+                                <select id="selectRival" class="input-field"></select>
+                            </div>
+                        </div>
+                        <div class="form-row score-row">
+                            <div class="form-group">
+                                <label>Goles mi equipo</label>
+                                <input type="number" id="inputGolesMi" class="input-field" min="0" max="20" required placeholder="0">
+                            </div>
+                            <span class="score-separator">vs</span>
+                            <div class="form-group">
+                                <label>Goles rival</label>
+                                <input type="number" id="inputGolesRival" class="input-field" min="0" max="20" required placeholder="0">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Registrar Asistencia</button>
+                    </form>
+                    <button class="btn btn-outline btn-sm" id="btnCerrarManual">Cerrar</button>
+                </div>
+
+                <!-- Attendance History -->
+                <div class="attendance-history">
+                    <h4>📖 Historial de Asistencias</h4>
+                    <div class="attendance-list" id="attendanceList">
+                        <div class="empty-state-sm">Aún no has registrado asistencias</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -220,50 +327,32 @@
             <div class="section-header">
                 <h2>Mi Perfil</h2>
             </div>
-
             <div class="perfil-container" id="perfilContainer">
                 <div class="perfil-login-prompt" id="perfilLoginPrompt">
-                    <span class="empty-icon">ð¤</span>
-                    <p>Inicia sesiÃ³n para ver tu perfil</p>
-                    <button class="btn btn-primary" id="btnPerfilLogin">Iniciar SesiÃ³n</button>
+                    <span class="empty-icon">👤</span>
+                    <p>Inicia sesión para ver tu perfil</p>
+                    <button class="btn btn-primary" id="btnPerfilLogin">Iniciar Sesión</button>
                 </div>
-
                 <div class="perfil-content hidden" id="perfilContent">
                     <div class="perfil-header">
-                        <div class="perfil-avatar" id="perfilAvatar">ð¤</div>
+                        <div class="perfil-avatar" id="perfilAvatar">👤</div>
                         <div class="perfil-info">
                             <h3 id="perfilNombre">-</h3>
                             <p id="perfilEquipo">-</p>
                         </div>
                     </div>
-
-                    <!-- Registro Estadio -->
                     <div class="perfil-card">
-                        <h4>ðï¸ Partidos en el Estadio</h4>
-                        <div class="estadio-counter">
-                            <span class="counter-num" id="estadioCount">0</span>
-                            <span class="counter-label">partidos</span>
+                        <h4>📊 Resumen de Actividad</h4>
+                        <div class="perfil-stats-row">
+                            <div class="perfil-stat"><span class="perfil-stat-num" id="perfilPartidos">0</span><span>Partidos</span></div>
+                            <div class="perfil-stat"><span class="perfil-stat-num" id="perfilProdes">0</span><span>Prodes</span></div>
+                            <div class="perfil-stat"><span class="perfil-stat-num" id="perfilLigas">0</span><span>Ligas</span></div>
                         </div>
-                        <button class="btn btn-outline btn-sm" id="btnRegistrarPartido">+ Registrar Partido</button>
                     </div>
-
-                    <!-- Medidor de Saladez -->
                     <div class="perfil-card">
-                        <h4>ð§ Medidor de Saladez</h4>
-                        <div class="saladez-meter">
-                            <div class="saladez-bar">
-                                <div class="saladez-fill" id="saladezFill" style="width: 0%"></div>
-                            </div>
-                            <span class="saladez-label" id="saladezLabel">Sin datos</span>
-                        </div>
-                        <p class="saladez-desc">Basado en tus pronÃ³sticos vs resultados reales</p>
-                    </div>
-
-                    <!-- Veredicto IA -->
-                    <div class="perfil-card">
-                        <h4>ð¤ Veredicto IA</h4>
-                        <div class="veredicto-box" id="veredictoBox">
-                            <p class="veredicto-text">Juega al menos 3 jornadas para recibir tu veredicto</p>
+                        <h4>🤖 Veredicto IA</h4>
+                        <div class="veredicto-box" id="perfilVeredictoBox">
+                            <p class="veredicto-text">Registra asistencias para recibir tu veredicto personalizado</p>
                         </div>
                     </div>
                 </div>
@@ -274,8 +363,8 @@
     <!-- Auth Modal -->
     <div class="modal-overlay hidden" id="authModal">
         <div class="modal">
-            <button class="modal-close" id="modalClose">â</button>
-            <h2 class="modal-title" id="modalTitle">Iniciar SesiÃ³n</h2>
+            <button class="modal-close" id="modalClose">✕</button>
+            <h2 class="modal-title" id="modalTitle">Iniciar Sesión</h2>
             <form id="authForm">
                 <div class="form-group hidden" id="registerNameGroup">
                     <label>Nombre de hincha</label>
@@ -286,8 +375,8 @@
                     <input type="email" id="inputEmail" class="input-field" placeholder="correo@ejemplo.com">
                 </div>
                 <div class="form-group">
-                    <label>ContraseÃ±a</label>
-                    <input type="password" id="inputPassword" class="input-field" placeholder="â¢â¢â¢â¢â¢â¢â¢â¢">
+                    <label>Contraseña</label>
+                    <input type="password" id="inputPassword" class="input-field" placeholder="•••••••••">
                 </div>
                 <div class="form-group hidden" id="registerTeamGroup">
                     <label>Tu equipo</label>
@@ -297,8 +386,8 @@
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-block" id="btnAuthSubmit">Entrar</button>
                 <p class="modal-switch">
-                    <span id="modalSwitchText">Â¿No tienes cuenta?</span>
-                    <a href="#" id="modalSwitchLink">RegÃ­strate</a>
+                    <span id="modalSwitchText">¿No tienes cuenta?</span>
+                    <a href="#" id="modalSwitchLink">Regístrate</a>
                 </p>
             </form>
         </div>
@@ -307,7 +396,7 @@
     <!-- Create Liga Modal -->
     <div class="modal-overlay hidden" id="crearLigaModal">
         <div class="modal">
-            <button class="modal-close" id="ligaModalClose">â</button>
+            <button class="modal-close" id="ligaModalClose">✕</button>
             <h2 class="modal-title">Crear Liga Privada</h2>
             <form id="crearLigaForm">
                 <div class="form-group">
@@ -320,9 +409,10 @@
     </div>
 
     <footer class="app-footer">
-        <p>TercerTiempo Â© 2026 â Hecho con â¤ï¸ para el fÃºtbol ecuatoriano</p>
+        <p>TercerTiempo © 2026 — Hecho con ❤️ para el fútbol ecuatoriano</p>
     </footer>
 
     <script src="main.js"></script>
 </body>
 </html>
+

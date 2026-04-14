@@ -34,7 +34,7 @@ const EQUIPOS = {
     'CUE': { nombre: 'Dep. Cuenca', corto: 'CUE', color1: '#C8102E', color2: '#FFF',
         svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#C8102E" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">DEP</text><text x="20" y="27" text-anchor="middle" fill="#FFD700" font-size="5">CUENCA</text></svg>' },
     'TEC': { nombre: 'Tecnico U.', corto: 'TEC', color1: '#800020', color2: '#FFF',
-        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#800020" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" filt="#FFF" font-size="5" font-weight="bold">TECNICO</text><text x="20" y="27" text-anchor="middle" fill="#FFF" font-size="6">U.</text></svg>' },
+        svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#800020" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="5" font-weight="bold">TECNICO</text><text x="20" y="27" text-anchor="middle" fill="#FFF" font-size="6">U.</text></svg>' },
     'DLF': { nombre: 'Delfin SC', corto: 'DLF', color1: '#003366', color2: '#87CEEB',
         svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#003366" stroke="#87CEEB" stroke-width="2"/><path d="M14,22 Q20,14 26,22 Q20,18 14,22Z" fill="#87CEEB"/><text x="20" y="30" text-anchor="middle" fill="#FFF" font-size="5">DELFIN</text></svg>' },
     'MUS': { nombre: 'Mushuc Runa', corto: 'MUS', color1: '#006400', color2: '#FFD700',
@@ -57,7 +57,7 @@ const EQUIPOS = {
         svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1B5E20" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">MANTA</text><text x="20" y="27" text-anchor="middle" fill="#FFD700" font-size="5">FC</text></svg>' }
 };
 
-// ===== DATOS FALLBACK â LigaPro 2026 Fecha 8 (12 Abril) =====
+// ===== DATOS FALLBACK — LigaPro 2026 Fecha 8 (12 Abril) =====
 const FALLBACK_STANDINGS = [
     { id: 'IDV', pj: 8, g: 6, e: 1, p: 1, gf: 16, gc: 8 },
     { id: 'UCA', pj: 8, g: 4, e: 4, p: 0, gf: 13, gc: 4 },
@@ -76,8 +76,8 @@ const FALLBACK_STANDINGS = [
     { id: 'EME', pj: 8, g: 2, e: 2, p: 4, gf: 6, gc: 10 },
     { id: 'MAN', pj: 8, g: 1, e: 1, p: 6, gf: 2, gc: 9 }
 ];
-// Datos corregidos desde Flashscore - Liga Pro Ecuador 2026 - Fecha 8
 // Nota: Emelec tiene -3 pts por sancion de la FEF (5 pts mostrados = 8 ganados - 3 penalizacion)
+// Datos corregidos desde Flashscore - Liga Pro Ecuador 2026 - Fecha 8 (14 Abril 2026)
 
 const FALLBACK_GOLEADORES = [
     { nombre: 'Bryan Miranda', equipo: 'AUC', goles: 6 },
@@ -206,6 +206,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initLigas();
     initHinchas();
     initPerfil();
+    initSubTabs();
+    initComunidad();
     checkSession();
     loadData();
 });
@@ -572,7 +574,7 @@ async function handleAuth(e) {
     if (!supabaseClient) {
         currentUser = { id: 'demo', email, nombre: email.split('@')[0], equipo: 'BSC' };
         onLogin(currentUser); closeAuthModal();
-        showToast('Bienvenido, ' + currentUser.nombre + '! (modo demo)');
+        showToast('Bienvenido, ' + currentUser.nombre + '. (modo demo)');
         return;
     }
     try {
@@ -582,7 +584,7 @@ async function handleAuth(e) {
             currentUser = { id: data.user.id, email: data.user.email, nombre: data.user.email.split('@')[0] };
             await loadProfile(data.user.id);
             onLogin(currentUser); closeAuthModal();
-            showToast('Bienvenido de vuelta, ' + currentUser.nombre + '!');
+            showToast('Bienvenido, ' + currentUser.nombre + '.');
         } else {
             const nombre = document.getElementById('inputNombreHincha').value;
             const equipo = document.getElementById('selectEquipo').value;
@@ -595,7 +597,7 @@ async function handleAuth(e) {
                 });
                 currentUser = { id: data.user.id, email, nombre: nombre || email.split('@')[0], equipo: equipo || 'BSC' };
                 onLogin(currentUser); closeAuthModal();
-                showToast('Cuenta creada! Bienvenido, ' + currentUser.nombre);
+                showToast('Cuenta creada. Bienvenido, ' + currentUser.nombre + '.');
             }
         }
     } catch (err) { showToast(err.message || 'Error de autenticacion'); console.error(err); }
@@ -663,7 +665,7 @@ async function logout() {
     if (supabaseClient) await supabaseClient.auth.signOut();
     currentUser = null; userAsistencias = [];
     onLogout();
-    showToast('Sesion cerrada');
+    showToast('Sesion cerrada correctamente.');
 }
 
 // ===== LIGAS PRIVADAS =====
@@ -699,7 +701,7 @@ async function crearLiga(e) {
             }).select().single();
             if (error) throw error;
             await supabaseClient.from('liga_miembros').insert({ liga_id: data.id, user_id: currentUser.id });
-            showToast('Liga creada! Codigo: ' + codigo);
+            showToast('Liga creada. Codigo: ' + codigo);
             document.getElementById('crearLigaModal')?.classList.add('hidden');
             document.getElementById('inputNombreLiga').value = '';
             loadLigas();
@@ -719,7 +721,7 @@ async function unirseLiga() {
             const { data: liga, error } = await supabaseClient.from('ligas').select('id, nombre').eq('codigo', codigo.toUpperCase()).single();
             if (error || !liga) { showToast('Codigo no encontrado'); return; }
             await supabaseClient.from('liga_miembros').insert({ liga_id: liga.id, user_id: currentUser.id });
-            showToast('Te uniste a "' + liga.nombre + '"!');
+            showToast('Te has unido a "' + liga.nombre + '".');
             document.getElementById('inputCodigoLiga').value = '';
             loadLigas();
         } catch (err) { showToast('Error al unirse'); console.error(err); }
@@ -860,7 +862,7 @@ async function registrarDeJornada(jornada, fecha, local, visitante, gl, gv) {
     updateEstadioStats();
     renderPastMatches();
     renderAttendanceHistory();
-    showToast('Asistencia registrada! ' + (resultado === 'W' ? 'Victoria!' : resultado === 'D' ? 'Empate' : 'Derrota'));
+    showToast('Asistencia registrada. Resultado: ' + (resultado === 'W' ? 'Victoria' : resultado === 'D' ? 'Empate' : 'Derrota'));
 }
 
 async function registrarManual(e) {
@@ -903,7 +905,7 @@ async function registrarManual(e) {
     renderAttendanceHistory();
     document.getElementById('manualFormPanel')?.classList.add('hidden');
     document.getElementById('manualAsistenciaForm')?.reset();
-    showToast('Asistencia registrada! ' + (resultado === 'W' ? 'Victoria!' : resultado === 'D' ? 'Empate' : 'Derrota'));
+    showToast('Asistencia registrada. Resultado: ' + (resultado === 'W' ? 'Victoria' : resultado === 'D' ? 'Empate' : 'Derrota'));
 }
 
 async function loadAsistencias() {
@@ -945,38 +947,36 @@ function updateEstadioStats() {
     }
 
     // Saladez meter
-    updateSaladez(total, wins, draws, losses);
+    updateLuckMeter(total, wins, draws, losses);
 }
 
-function updateSaladez(total, wins, draws, losses) {
+function updateLuckMeter(total, wins, draws, losses) {
     if (total === 0) return;
-    // Saladez = higher means more "salado" (team loses when you attend)
     const lossPct = Math.round(losses / total * 100);
-    const saladez = Math.min(100, Math.max(5, lossPct + Math.floor(draws / total * 30)));
-    const fill = document.getElementById('saladezFill');
-    const label = document.getElementById('saladezLabel');
+    const luckScore = Math.min(100, Math.max(5, lossPct + Math.floor(draws / total * 30)));
+    const fill = document.getElementById('luckFill');
+    const label = document.getElementById('luckLabel');
 
-    if (fill) fill.style.width = saladez + '%';
+    if (fill) fill.style.width = luckScore + '%';
     let texto = '';
-    if (saladez < 20) texto = 'Amuleto bendito! Tu equipo vuela contigo';
-    else if (saladez < 40) texto = 'Hincha de buena fe, normal nomas';
-    else if (saladez < 60) texto = 'Medio salado... mejor no vayas tan seguido';
-    else if (saladez < 80) texto = 'Salado confirmado. Tu equipo tiembla cuando llegas';
-    else texto = 'MUFA TOTAL. Quedate en casa, por favor';
-    if (label) label.textContent = saladez + '% - ' + texto;
+    if (luckScore < 20) texto = 'Excelente: tu equipo tiene un rendimiento sobresaliente cuando asistes.';
+    else if (luckScore < 40) texto = 'Bueno: resultados positivos en la mayoria de tus asistencias.';
+    else if (luckScore < 60) texto = 'Regular: resultados mixtos. Tu presencia no inclina la balanza de forma clara.';
+    else if (luckScore < 80) texto = 'Desfavorable: tu equipo tiende a obtener malos resultados cuando asistes.';
+    else texto = 'Critico: la correlacion entre tu asistencia y las derrotas es notable.';
+    if (label) label.textContent = luckScore + '% - ' + texto;
 
-    // Veredicto
-    const veredicto = document.getElementById('veredictoText');
-    const perfilVeredicto = document.getElementById('perfilVeredictoBox');
-    const veredictos = [
-        'Oe causa, tu equipo gana cuando tu vas al estadio. Eres el amuleto que todo DT quisiera. Sigue yendo que contigo en la tribuna ni Messi nos gana.',
-        'Mira loco, ni sales ni paras. A veces tu equipo gana, a veces pierde. Eres como la lluvia en Guayaquil: impredecible pero parte del paisaje.',
-        'Oye brother, cuando vas al estadio tu equipo juega como si tuvieran los guayos al reves. Mejor quedate en casa viendo por el celular.',
-        'HERMANO. Cada vez que pisas el estadio es gol del rival. La tribuna te tiene fichado. Eres mas salado que el agua del estero. Quedate leyendo esto desde tu casa.'
+    const verdict = document.getElementById('verdictText');
+    const perfilVerdict = document.getElementById('perfilVerdictBox');
+    const verdicts = [
+        'Los datos indican que tu equipo rinde de forma excepcional cuando asistes al estadio. Tu presencia parece ser un factor positivo. Continua asistiendo.',
+        'Los resultados cuando asistes son variados, con una ligera tendencia positiva. No hay una correlacion clara entre tu presencia y el rendimiento del equipo.',
+        'Se observa una tendencia negativa en los resultados cuando asistes. Esto podria ser coincidencia, pero los numeros son desfavorables.',
+        'Existe una correlacion significativa entre tu asistencia y los resultados adversos de tu equipo. Estadisticamente, los datos sugieren considerar alternativas.'
     ];
-    const idx = saladez < 25 ? 0 : saladez < 50 ? 1 : saladez < 75 ? 2 : 3;
-    if (veredicto) veredicto.textContent = veredictos[idx];
-    if (perfilVeredicto) perfilVeredicto.innerHTML = '<p class="veredicto-text">' + veredictos[idx] + '</p>';
+    const idx = luckScore < 25 ? 0 : luckScore < 50 ? 1 : luckScore < 75 ? 2 : 3;
+    if (verdict) verdict.textContent = verdicts[idx];
+    if (perfilVerdict) perfilVerdict.innerHTML = '<p class="verdict-text">' + verdicts[idx] + '</p>';
 }
 
 function renderAttendanceHistory() {
@@ -1005,6 +1005,222 @@ function initPerfil() {
     // Perfil is updated via onLogin
 }
 
+// ===== SUB-TABS (Estadio & Comunidad) =====
+function initSubTabs() {
+    document.querySelectorAll('.sub-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const parent = btn.closest('.tab-content') || btn.parentElement.parentElement;
+            parent.querySelectorAll('.sub-tab').forEach(b => b.classList.toggle('active', b === btn));
+            parent.querySelectorAll('.sub-content').forEach(c => {
+                c.classList.toggle('active', c.id === 'subtab-' + btn.dataset.subtab);
+            });
+        });
+    });
+}
+
+// ===== COMUNIDAD / FORO =====
+let foroComments = { general: [], equipo: {}, jornada: {} };
+
+function initComunidad() {
+    // General foro
+    document.getElementById('btnForoGeneralPost')?.addEventListener('click', () => postComment('general'));
+    // Equipo foro
+    const eqSelect = document.getElementById('foroEquipoSelect');
+    if (eqSelect) {
+        Object.entries(EQUIPOS).forEach(([id, eq]) => {
+            const opt = document.createElement('option');
+            opt.value = id; opt.textContent = eq.nombre;
+            eqSelect.appendChild(opt);
+        });
+        eqSelect.addEventListener('change', () => loadForoEquipo(eqSelect.value));
+    }
+    document.getElementById('btnForoEquipoPost')?.addEventListener('click', () => {
+        const equipo = document.getElementById('foroEquipoSelect')?.value;
+        if (equipo) postComment('equipo', equipo);
+        else showToast('Selecciona un equipo primero.');
+    });
+    // Jornada foro
+    const jSelect = document.getElementById('foroJornadaSelect');
+    if (jSelect) {
+        for (let i = 1; i <= 30; i++) {
+            const opt = document.createElement('option');
+            opt.value = i; opt.textContent = 'Jornada ' + i;
+            jSelect.appendChild(opt);
+        }
+        jSelect.addEventListener('change', () => loadForoJornada(jSelect.value));
+    }
+    document.getElementById('btnForoJornadaPost')?.addEventListener('click', () => {
+        const jornada = document.getElementById('foroJornadaSelect')?.value;
+        if (jornada) postComment('jornada', jornada);
+        else showToast('Selecciona una jornada primero.');
+    });
+    // Load initial data
+    loadForoGeneral();
+    loadHinchaProfiles();
+}
+
+async function postComment(tipo, filtro) {
+    if (!currentUser) { showToast('Inicia sesion para comentar.'); openAuthModal('login'); return; }
+    let textEl, listId;
+    if (tipo === 'general') { textEl = 'foroGeneralText'; listId = 'foroGeneralList'; }
+    else if (tipo === 'equipo') { textEl = 'foroEquipoText'; listId = 'foroEquipoList'; }
+    else { textEl = 'foroJornadaText'; listId = 'foroJornadaList'; }
+
+    const text = document.getElementById(textEl)?.value.trim();
+    if (!text) { showToast('Escribe un comentario.'); return; }
+
+    const comment = {
+        user_id: currentUser.id,
+        nombre: currentUser.nombre,
+        equipo: currentUser.equipo || '',
+        tipo: tipo,
+        filtro: filtro || 'general',
+        texto: text,
+        created_at: new Date().toISOString()
+    };
+
+    if (supabaseClient) {
+        try {
+            const { error } = await supabaseClient.from('foro_comentarios').insert(comment);
+            if (error) throw error;
+        } catch (e) { console.error('Foro insert error:', e); }
+    }
+
+    document.getElementById(textEl).value = '';
+    // Reload
+    if (tipo === 'general') loadForoGeneral();
+    else if (tipo === 'equipo') loadForoEquipo(filtro);
+    else loadForoJornada(filtro);
+    showToast('Comentario publicado.');
+}
+
+async function loadForoGeneral() {
+    const list = document.getElementById('foroGeneralList');
+    if (!list) return;
+    if (supabaseClient) {
+        try {
+            const { data } = await supabaseClient.from('foro_comentarios')
+                .select('*').eq('tipo', 'general').order('created_at', { ascending: false }).limit(50);
+            if (data && data.length > 0) {
+                list.innerHTML = data.map(renderComment).join('');
+                return;
+            }
+        } catch (e) { console.warn('Foro load error:', e); }
+    }
+    list.innerHTML = '<div class="empty-state-sm">No hay comentarios aun. Se el primero en participar.</div>';
+}
+
+async function loadForoEquipo(equipoId) {
+    const list = document.getElementById('foroEquipoList');
+    if (!list || !equipoId) return;
+    if (supabaseClient) {
+        try {
+            const { data } = await supabaseClient.from('foro_comentarios')
+                .select('*').eq('tipo', 'equipo').eq('filtro', equipoId)
+                .order('created_at', { ascending: false }).limit(50);
+            if (data && data.length > 0) {
+                list.innerHTML = data.map(renderComment).join('');
+                return;
+            }
+        } catch (e) { console.warn('Foro equipo load error:', e); }
+    }
+    const eq = EQUIPOS[equipoId];
+    list.innerHTML = '<div class="empty-state-sm">No hay comentarios sobre ' + (eq ? eq.nombre : equipoId) + ' aun.</div>';
+}
+
+async function loadForoJornada(jornada) {
+    const list = document.getElementById('foroJornadaList');
+    if (!list || !jornada) return;
+    if (supabaseClient) {
+        try {
+            const { data } = await supabaseClient.from('foro_comentarios')
+                .select('*').eq('tipo', 'jornada').eq('filtro', String(jornada))
+                .order('created_at', { ascending: false }).limit(50);
+            if (data && data.length > 0) {
+                list.innerHTML = data.map(renderComment).join('');
+                return;
+            }
+        } catch (e) { console.warn('Foro jornada load error:', e); }
+    }
+    list.innerHTML = '<div class="empty-state-sm">No hay comentarios sobre la Jornada ' + jornada + ' aun.</div>';
+}
+
+function renderComment(c) {
+    const eq = EQUIPOS[c.equipo];
+    const eqName = eq ? eq.corto : (c.equipo || '');
+    const initials = (c.nombre || '?').substring(0, 2).toUpperCase();
+    const timeAgo = getTimeAgo(c.created_at);
+    return '<div class="comment-item">' +
+        '<div class="comment-header">' +
+        '<div class="comment-avatar">' + initials + '</div>' +
+        '<span class="comment-author">' + (c.nombre || 'Anonimo') + '</span>' +
+        (eqName ? '<span class="comment-team-badge">' + eqName + '</span>' : '') +
+        '<span class="comment-time">' + timeAgo + '</span>' +
+        '</div>' +
+        '<div class="comment-body">' + escapeHtml(c.texto) + '</div>' +
+        '</div>';
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function getTimeAgo(dateStr) {
+    const now = new Date();
+    const then = new Date(dateStr);
+    const diff = Math.floor((now - then) / 1000);
+    if (diff < 60) return 'ahora';
+    if (diff < 3600) return Math.floor(diff / 60) + ' min';
+    if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+    return Math.floor(diff / 86400) + ' d';
+}
+
+// ===== HINCHA PROFILES (Public) =====
+async function loadHinchaProfiles() {
+    const grid = document.getElementById('hinchaGrid');
+    if (!grid) return;
+    if (supabaseClient) {
+        try {
+            const { data } = await supabaseClient.from('perfiles').select('id, nombre, equipo').limit(50);
+            if (data && data.length > 0) {
+                // For each profile, load their attendance stats
+                const profiles = [];
+                for (const p of data) {
+                    const { data: asist } = await supabaseClient.from('asistencias_estadio')
+                        .select('resultado').eq('user_id', p.id);
+                    const total = asist ? asist.length : 0;
+                    const w = asist ? asist.filter(a => a.resultado === 'W').length : 0;
+                    const d = asist ? asist.filter(a => a.resultado === 'D').length : 0;
+                    const l = asist ? asist.filter(a => a.resultado === 'L').length : 0;
+                    profiles.push({ ...p, total, w, d, l });
+                }
+                profiles.sort((a, b) => b.total - a.total);
+                grid.innerHTML = profiles.map(renderHinchaCard).join('');
+                return;
+            }
+        } catch (e) { console.warn('Hincha profiles load error:', e); }
+    }
+    grid.innerHTML = '<div class="empty-state-sm">No hay perfiles disponibles aun.</div>';
+}
+
+function renderHinchaCard(p) {
+    const eq = EQUIPOS[p.equipo];
+    const eqName = eq ? eq.nombre : (p.equipo || 'Sin equipo');
+    const initials = (p.nombre || '?').substring(0, 2).toUpperCase();
+    return '<div class="hincha-card">' +
+        '<div class="hincha-avatar">' + initials + '</div>' +
+        '<div class="hincha-name">' + (p.nombre || 'Anonimo') + '</div>' +
+        '<div class="hincha-team">' + eqName + '</div>' +
+        '<div class="hincha-stats">' +
+        '<div class="hincha-stat"><span class="hincha-stat-num">' + p.total + '</span><span class="hincha-stat-label">Partidos</span></div>' +
+        '<div class="hincha-stat"><span class="hincha-stat-num w">' + p.w + '</span><span class="hincha-stat-label">V</span></div>' +
+        '<div class="hincha-stat"><span class="hincha-stat-num d">' + p.d + '</span><span class="hincha-stat-label">E</span></div>' +
+        '<div class="hincha-stat"><span class="hincha-stat-num l">' + p.l + '</span><span class="hincha-stat-label">D</span></div>' +
+        '</div></div>';
+}
+
 // ===== UTILITIES =====
 function showToast(message) {
     const existing = document.querySelector('.toast');
@@ -1020,4 +1236,3 @@ function showToast(message) {
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
-

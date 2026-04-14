@@ -1,242 +1,328 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TercerTiempo — Prode, estadísticas y la hinchada del Ecuador</title>
-  <meta name="description" content="TercerTiempo: el prode oficial de la LigaPro Ecuador, ligas con amigos, y descubre si eres salado cuando vas al estadio."/>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>"/>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="css/style.css"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TercerTiempo â FÃºtbol Ecuatoriano</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-
-<!-- HEADER -->
-<header class="hdr">
-  <div class="hdr-in">
-    <div class="logo-wrap">
-      <div class="logo"><span class="l-s">TERCER</span><span class="l-e"> </span><span class="l-c">TIEMPO</span></div>
-      <div class="logo-tag">Prode · LigaPro Ecuador · ¿Eres salado?</div>
-    </div>
-    <div class="hdr-right" id="user-btn-area">
-      <button class="btn b-am" onclick="openModal('modal-login')">Iniciar sesión</button>
-      <button class="btn b-outline" onclick="openModal('modal-register')">Registrarse</button>
-    </div>
-  </div>
-</header>
-
-<!-- NAV -->
-<nav class="nav" id="main-nav">
-  <button class="ntab on" data-tab="tabla">🏆 Tabla 2026</button>
-  <button class="ntab" data-tab="stats">📊 Estadísticas</button>
-  <button class="ntab" data-tab="prode">🎯 Prode Global</button>
-  <button class="ntab auth-required" data-tab="ligas">👥 Mis Ligas</button>
-  <button class="ntab" data-tab="historial">🏟️ Hinchas</button>
-  <button class="ntab auth-required" data-tab="perfil">⚡ Mi Perfil</button>
-</nav>
-
-<!-- AUTH BANNER (visible when not logged in) -->
-<div id="auth-banner" class="auth-banner" style="display:none">
-  <span>🔒 Inicia sesión para acceder al Prode, Ligas, tu Historial y Perfil</span>
-  <button class="btn b-am btn-sm" onclick="openModal('modal-login')">Iniciar sesión</button>
-  <button class="btn b-outline btn-sm" onclick="openModal('modal-register')">Registrarse gratis</button>
-</div>
-
-<!-- SCREENS -->
-<main class="main">
-
-  <!-- ======= TABLA ======= -->
-  <section class="scr on" id="scr-tabla">
-    <div class="card">
-      <div class="card-hdr">
-        <span class="card-t">LigaPro Serie A 2026</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <span id="tabla-update" class="update-chip"></span>
-          <span class="badge b-am">J<span id="jornada-actual">8</span> / 30</span>
-          <button class="btn b-outline btn-sm" onclick="fetchTabla()">↻ Actualizar</button>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">â½</span>
+                <h1>TercerTiempo</h1>
+            </div>
+            <div class="auth-area" id="authArea">
+                <button class="btn btn-outline" id="btnLogin">Iniciar SesiÃ³n</button>
+                <button class="btn btn-primary" id="btnRegister">Registrarse</button>
+            </div>
+            <div class="user-area hidden" id="userArea">
+                <span class="user-name" id="userName"></span>
+                <button class="btn btn-outline btn-sm" id="btnLogout">Salir</button>
+            </div>
         </div>
-      </div>
-      <div id="tabla-loading" class="loading-bar"></div>
-      <div style="overflow-x:auto">
-        <table class="tbl">
-          <thead><tr>
-            <th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th>
-            <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
-          </tr></thead>
-          <tbody id="tbody-tabla"></tbody>
-        </table>
-      </div>
-      <div class="zona-legend">
-        <div class="zl-i"><div class="zl-b" style="background:var(--ver)"></div>Copa Libertadores</div>
-        <div class="zl-i"><div class="zl-b" style="background:var(--az)"></div>Sudamericana</div>
-        <div class="zl-i"><div class="zl-b" style="background:var(--ro)"></div>Descenso</div>
-      </div>
-    </div>
-  </section>
+    </header>
 
-  <!-- ======= STATS ======= -->
-  <section class="scr" id="scr-stats">
-    <div class="g4 mb1">
-      <div class="met"><div class="met-v" id="st-goles">—</div><div class="met-l">Goles totales</div></div>
-      <div class="met"><div class="met-v" id="st-jornadas">—</div><div class="met-l">Jornadas</div></div>
-      <div class="met"><div class="met-v st-ver" id="st-promedio">—</div><div class="met-l">Goles / partido</div></div>
-      <div class="met"><div class="met-v st-na" id="st-locales">—</div><div class="met-l">Victoria local</div></div>
-    </div>
-    <div class="g2 mb1">
-      <div class="card"><div class="card-t">⚽ Goleadores</div><div id="goleadores"></div></div>
-      <div class="card"><div class="card-t">🎯 Asistencias</div><div id="asistencias"></div></div>
-    </div>
-    <div class="g2">
-      <div class="card"><div class="card-t">🏹 Mejor ataque</div><div id="ataque"></div></div>
-      <div class="card"><div class="card-t">🛡️ Mejor defensa</div><div id="defensa"></div></div>
-    </div>
-  </section>
-
-  <!-- ======= PRODE ======= -->
-  <section class="scr" id="scr-prode">
-    <div class="hero-prode">
-      <div>
-        <div class="hero-t">Prode Global</div>
-        <div class="hero-sub">Jornada <span id="prode-jornada">13</span> · ¡Compite contra Ecuador entero!</div>
-      </div>
-      <div class="ph-stats">
-        <div class="ph-s"><div class="ph-v" id="ph-jug">0</div><div class="ph-l">Jugadores</div></div>
-        <div class="ph-s"><div class="ph-v ph-am" id="ph-pts">—</div><div class="ph-l">Tus pts</div></div>
-        <div class="ph-s"><div class="ph-v ph-na" id="ph-pos">—</div><div class="ph-l">Posición</div></div>
-      </div>
-    </div>
-    <div class="punt-box">Sistema: Resultado correcto <b>+1 pt</b> · Marcador exacto <b>+3 pts</b> · Máx. por jornada: <b>24 pts</b></div>
-    <div class="itabs" id="prode-tabs">
-      <button class="itab on" onclick="pTab('picks')">Mis pronósticos</button>
-      <button class="itab" onclick="pTab('ranking')">🏆 Ranking global</button>
-      <button class="itab" onclick="pTab('historial-p')">📅 Historial</button>
-    </div>
-    <div id="pt-picks">
-      <div id="fixture-loading" class="loading-bar"></div>
-      <div id="fixture"></div>
-      <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
-        <button class="btn b-am" onclick="guardarProde()">Guardar pronósticos</button>
-      </div>
-      <div id="prode-msg" style="margin-top:10px"></div>
-    </div>
-    <div id="pt-ranking" style="display:none">
-      <div class="card">
-        <div class="card-hdr">
-          <span class="card-t">Ranking — Jornada <span id="rank-j">13</span></span>
-          <span class="badge b-am" id="rank-badge">0 jugadores</span>
+    <!-- Navigation Tabs -->
+    <nav class="tab-nav">
+        <div class="tab-nav-inner">
+            <button class="tab-btn active" data-tab="tabla">
+                <span class="tab-icon">ð</span>
+                <span class="tab-label">Tabla</span>
+            </button>
+            <button class="tab-btn" data-tab="estadisticas">
+                <span class="tab-icon">ð</span>
+                <span class="tab-label">EstadÃ­sticas</span>
+            </button>
+            <button class="tab-btn" data-tab="prode">
+                <span class="tab-icon">ð¯</span>
+                <span class="tab-label">Prode</span>
+            </button>
+            <button class="tab-btn" data-tab="ligas">
+                <span class="tab-icon">ð¥</span>
+                <span class="tab-label">Ligas</span>
+            </button>
+            <button class="tab-btn" data-tab="hinchas">
+                <span class="tab-icon">ð</span>
+                <span class="tab-label">Hinchas</span>
+            </button>
+            <button class="tab-btn" data-tab="perfil">
+                <span class="tab-icon">ð¤</span>
+                <span class="tab-label">Mi Perfil</span>
+            </button>
         </div>
-        <div id="ranking-list"><div class="empty"><span class="empty-icon">🏆</span>Nadie ha jugado aún</div></div>
-      </div>
-      <div class="card">
-        <div class="card-t mb1">Ranking acumulado</div>
-        <div id="ranking-acum"><div class="empty"><span class="empty-icon">📊</span>Sin datos</div></div>
-      </div>
-    </div>
-    <div id="pt-historial-p" style="display:none">
-      <div class="card">
-        <div class="card-t mb1">Tu historial de pronósticos</div>
-        <div id="hist-jornadas"></div>
-      </div>
-    </div>
-  </section>
+    </nav>
 
-  <!-- ======= LIGAS ======= -->
-  <section class="scr" id="scr-ligas">
-    <div class="itabs">
-      <button class="itab on" onclick="lTab('mis')">Mis ligas</button>
-      <button class="itab" onclick="lTab('crear')">➕ Crear liga</button>
-      <button class="itab" onclick="lTab('unirse')">🔑 Unirme</button>
-    </div>
-    <div id="lt-mis"></div>
-    <div id="lt-crear" style="display:none">
-      <div class="card">
-        <div class="card-t mb1">Crear nueva liga</div>
-        <div id="crear-msg"></div>
-        <div class="field"><label>Nombre de la liga</label><input id="l-nom" placeholder="Ej: Los Parceros del Trabajo"/></div>
-        <div class="field"><label>Descripción (opcional)</label><input id="l-desc" placeholder="Solo para los del barrio..."/></div>
-        <div class="field"><label>Tipo</label>
-          <select id="l-priv"><option value="1">Privada — solo por código</option><option value="0">Pública</option></select>
+    <!-- Tab Contents -->
+    <main class="main-content">
+
+        <!-- TAB 1: TABLA DE POSICIONES -->
+        <section class="tab-content active" id="tab-tabla">
+            <div class="section-header">
+                <h2>Tabla LigaPro 2026</h2>
+                <div class="badge">Fecha 8 â 13 Abril</div>
+            </div>
+
+            <div class="phase-info">
+                <div class="phase-card libertadores">
+                    <span class="phase-dot"></span>
+                    <span>Hexagonal TÃ­tulo (1Â°-6Â°)</span>
+                </div>
+                <div class="phase-card sudamericana">
+                    <span class="phase-dot"></span>
+                    <span>Cuadrangular Sudamericana (7Â°-10Â°)</span>
+                </div>
+                <div class="phase-card normal">
+                    <span class="phase-dot"></span>
+                    <span>Hexagonal No Descenso (11Â°-16Â°)</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="standings-table" id="standingsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-pos">#</th>
+                            <th class="col-team">Equipo</th>
+                            <th class="col-stat">PJ</th>
+                            <th class="col-stat">G</th>
+                            <th class="col-stat">E</th>
+                            <th class="col-stat">P</th>
+                            <th class="col-stat">GF</th>
+                            <th class="col-stat">GC</th>
+                            <th class="col-stat">DG</th>
+                            <th class="col-pts">PTS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="standingsBody">
+                        <!-- Filled by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TAB 2: ESTADÃSTICAS -->
+        <section class="tab-content" id="tab-estadisticas">
+            <div class="section-header">
+                <h2>EstadÃ­sticas LigaPro 2026</h2>
+            </div>
+
+            <div class="stats-grid">
+                <!-- Goleadores -->
+                <div class="stats-card">
+                    <h3>â½ Goleadores</h3>
+                    <div class="stats-list" id="goleadoresList"></div>
+                </div>
+                <!-- Asistencias -->
+                <div class="stats-card">
+                    <h3>ð¯ Asistencias</h3>
+                    <div class="stats-list" id="asistenciasList"></div>
+                </div>
+                <!-- Mejor Ataque -->
+                <div class="stats-card">
+                    <h3>ð¥ Mejor Ataque</h3>
+                    <div class="stats-list" id="ataqueList"></div>
+                </div>
+                <!-- Mejor Defensa -->
+                <div class="stats-card">
+                    <h3>ð¡ï¸ Mejor Defensa</h3>
+                    <div class="stats-list" id="defensaList"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: PRODE GLOBAL -->
+        <section class="tab-content" id="tab-prode">
+            <div class="section-header">
+                <h2>Prode Global â Jornada 9</h2>
+                <div class="badge">+1pt resultado Â· +3pts exacto</div>
+            </div>
+
+            <div class="prode-grid" id="prodeGrid">
+                <!-- Filled by JS -->
+            </div>
+
+            <div class="prode-actions">
+                <button class="btn btn-primary btn-lg" id="btnGuardarProde">
+                    ð¾ Guardar PronÃ³sticos
+                </button>
+                <p class="prode-note">Visible para todos. Guardar requiere cuenta.</p>
+            </div>
+
+            <div class="prode-ranking">
+                <h3>ð Ranking Global</h3>
+                <div class="ranking-list" id="rankingList">
+                    <div class="ranking-empty">Inicia sesiÃ³n para ver el ranking</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: LIGAS PRIVADAS -->
+        <section class="tab-content" id="tab-ligas">
+            <div class="section-header">
+                <h2>Ligas Privadas</h2>
+            </div>
+
+            <div class="ligas-actions">
+                <button class="btn btn-primary" id="btnCrearLiga">â Crear Liga</button>
+                <div class="join-liga">
+                    <input type="text" placeholder="CÃ³digo de liga" id="inputCodigoLiga" class="input-field">
+                    <button class="btn btn-outline" id="btnUnirseLiga">Unirse</button>
+                </div>
+            </div>
+
+            <div class="ligas-list" id="ligasList">
+                <div class="empty-state">
+                    <span class="empty-icon">ðï¸</span>
+                    <p>Crea o Ãºnete a una liga para competir con tus panas</p>
+                </div>
+            </div>
+
+            <!-- Liga Detail (hidden by default) -->
+            <div class="liga-detail hidden" id="ligaDetail">
+                <button class="btn btn-outline btn-sm" id="btnVolverLigas">â Volver</button>
+                <div class="liga-header" id="ligaHeader"></div>
+                <div class="liga-tabs">
+                    <button class="liga-tab-btn active" data-ligatab="tabla">Tabla</button>
+                    <button class="liga-tab-btn" data-ligatab="chat">Chat</button>
+                    <button class="liga-tab-btn" data-ligatab="trofeos">Trofeos</button>
+                </div>
+                <div class="liga-tab-content" id="ligaTabContent"></div>
+            </div>
+        </section>
+
+        <!-- TAB 5: HINCHAS -->
+        <section class="tab-content" id="tab-hinchas">
+            <div class="section-header">
+                <h2>Comunidad Hincha</h2>
+            </div>
+
+            <div class="hinchas-search">
+                <input type="text" placeholder="Buscar hincha por nombre..." id="inputBuscarHincha" class="input-field">
+            </div>
+
+            <div class="hinchas-grid" id="hinchasGrid">
+                <div class="empty-state">
+                    <span class="empty-icon">ð</span>
+                    <p>Explora la comunidad de hinchas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: MI PERFIL -->
+        <section class="tab-content" id="tab-perfil">
+            <div class="section-header">
+                <h2>Mi Perfil</h2>
+            </div>
+
+            <div class="perfil-container" id="perfilContainer">
+                <div class="perfil-login-prompt" id="perfilLoginPrompt">
+                    <span class="empty-icon">ð¤</span>
+                    <p>Inicia sesiÃ³n para ver tu perfil</p>
+                    <button class="btn btn-primary" id="btnPerfilLogin">Iniciar SesiÃ³n</button>
+                </div>
+
+                <div class="perfil-content hidden" id="perfilContent">
+                    <div class="perfil-header">
+                        <div class="perfil-avatar" id="perfilAvatar">ð¤</div>
+                        <div class="perfil-info">
+                            <h3 id="perfilNombre">-</h3>
+                            <p id="perfilEquipo">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Registro Estadio -->
+                    <div class="perfil-card">
+                        <h4>ðï¸ Partidos en el Estadio</h4>
+                        <div class="estadio-counter">
+                            <span class="counter-num" id="estadioCount">0</span>
+                            <span class="counter-label">partidos</span>
+                        </div>
+                        <button class="btn btn-outline btn-sm" id="btnRegistrarPartido">+ Registrar Partido</button>
+                    </div>
+
+                    <!-- Medidor de Saladez -->
+                    <div class="perfil-card">
+                        <h4>ð§ Medidor de Saladez</h4>
+                        <div class="saladez-meter">
+                            <div class="saladez-bar">
+                                <div class="saladez-fill" id="saladezFill" style="width: 0%"></div>
+                            </div>
+                            <span class="saladez-label" id="saladezLabel">Sin datos</span>
+                        </div>
+                        <p class="saladez-desc">Basado en tus pronÃ³sticos vs resultados reales</p>
+                    </div>
+
+                    <!-- Veredicto IA -->
+                    <div class="perfil-card">
+                        <h4>ð¤ Veredicto IA</h4>
+                        <div class="veredicto-box" id="veredictoBox">
+                            <p class="veredicto-text">Juega al menos 3 jornadas para recibir tu veredicto</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay hidden" id="authModal">
+        <div class="modal">
+            <button class="modal-close" id="modalClose">â</button>
+            <h2 class="modal-title" id="modalTitle">Iniciar SesiÃ³n</h2>
+            <form id="authForm">
+                <div class="form-group hidden" id="registerNameGroup">
+                    <label>Nombre de hincha</label>
+                    <input type="text" id="inputNombreHincha" class="input-field" placeholder="Tu alias">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="inputEmail" class="input-field" placeholder="correo@ejemplo.com">
+                </div>
+                <div class="form-group">
+                    <label>ContraseÃ±a</label>
+                    <input type="password" id="inputPassword" class="input-field" placeholder="â¢â¢â¢â¢â¢â¢â¢â¢">
+                </div>
+                <div class="form-group hidden" id="registerTeamGroup">
+                    <label>Tu equipo</label>
+                    <select id="selectEquipo" class="input-field">
+                        <option value="">Selecciona tu equipo</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg btn-block" id="btnAuthSubmit">Entrar</button>
+                <p class="modal-switch">
+                    <span id="modalSwitchText">Â¿No tienes cuenta?</span>
+                    <a href="#" id="modalSwitchLink">RegÃ­strate</a>
+                </p>
+            </form>
         </div>
-        <button class="btn b-am" onclick="crearLiga()">Crear liga</button>
-      </div>
     </div>
-    <div id="lt-unirse" style="display:none">
-      <div class="card">
-        <div class="card-t mb1">Unirse por código</div>
-        <div id="unirse-msg"></div>
-        <div class="field"><label>Código de liga</label><input id="l-cod-inp" placeholder="XYZABC" class="cod-input"/></div>
-        <button class="btn b-ver" onclick="unirse()">Unirme</button>
-      </div>
-    </div>
-    <div id="lt-detalle" style="display:none"></div>
-  </section>
 
-  <!-- ======= HINCHAS (público) ======= -->
-  <section class="scr" id="scr-historial">
-    <div class="itabs">
-      <button class="itab on" onclick="hTab('comunidad')">🏟️ Comunidad de hinchas</button>
-      <button class="itab" onclick="hTab('mis-partidos')">📋 Mis partidos</button>
+    <!-- Create Liga Modal -->
+    <div class="modal-overlay hidden" id="crearLigaModal">
+        <div class="modal">
+            <button class="modal-close" id="ligaModalClose">â</button>
+            <h2 class="modal-title">Crear Liga Privada</h2>
+            <form id="crearLigaForm">
+                <div class="form-group">
+                    <label>Nombre de la liga</label>
+                    <input type="text" id="inputNombreLiga" class="input-field" placeholder="Ej: Los Cracks del Barrio">
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg btn-block">Crear Liga</button>
+            </form>
+        </div>
     </div>
-    <div id="ht-comunidad">
-      <div class="card" style="margin-bottom:1rem"><div style="font-size:13px;color:var(--muted);font-weight:600">Todos los hinchas de TercerTiempo. Click en cualquiera para ver su historial y saladez.</div></div>
-      <div id="comunidad-list"><div class="empty"><span class="empty-icon">⏳</span>Cargando hinchas...</div></div>
-    </div>
-    <div id="ht-mis-partidos" style="display:none">
-      <div id="mis-partidos-list"></div>
-    </div>
-    <div id="ht-perfil-usuario" style="display:none"></div>
-  </section>
 
-  <!-- ======= PERFIL ======= -->
-  <section class="scr" id="scr-perfil">
-    <div id="perfil-content"><div class="empty"><span class="empty-icon">⚡</span>Cargando...</div></div>
-  </section>
+    <footer class="app-footer">
+        <p>TercerTiempo Â© 2026 â Hecho con â¤ï¸ para el fÃºtbol ecuatoriano</p>
+    </footer>
 
-</main>
-
-<!-- MODAL LOGIN -->
-<div class="modal-overlay" id="modal-login" style="display:none" onclick="overlayClose(event,'modal-login')">
-  <div class="modal-box">
-    <div class="modal-t">Bienvenido</div>
-    <div id="lmsg"></div>
-    <div class="field"><label>Usuario o email</label><input id="l-u" placeholder="tu@email.com" autocomplete="email"/></div>
-    <div class="field"><label>Contraseña</label><input id="l-p" type="password" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-    <button class="btn b-am full-w" onclick="doLogin()">Entrar</button>
-    <div class="modal-foot">¿Sin cuenta? <a href="#" onclick="closeModal('modal-login');openModal('modal-register')">Regístrate gratis</a></div>
-    <button class="modal-close" onclick="closeModal('modal-login')">✕</button>
-  </div>
-</div>
-
-<!-- MODAL REGISTER -->
-<div class="modal-overlay" id="modal-register" style="display:none" onclick="overlayClose(event,'modal-register')">
-  <div class="modal-box" style="max-width:440px">
-    <div class="modal-t">Crear cuenta</div>
-    <div id="rmsg"></div>
-    <div class="g2">
-      <div class="field"><label>Nombre completo</label><input id="r-n" placeholder="Juan Pérez" autocomplete="name"/></div>
-      <div class="field"><label>Usuario</label><input id="r-u" placeholder="juanperez" autocomplete="username"/></div>
-    </div>
-    <div class="field"><label>Email</label><input id="r-e" type="email" placeholder="tu@email.com" autocomplete="email"/></div>
-    <div class="field"><label>Contraseña</label><input id="r-p" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/></div>
-    <div class="field"><label>Tu equipo favorito</label>
-      <select id="r-eq">
-        <option value="">Selecciona...</option>
-        <option>Barcelona SC</option><option>Emelec</option><option>Liga de Quito</option>
-        <option>Independiente del Valle</option><option>Aucas</option><option>Deportivo Quito</option>
-        <option>El Nacional</option><option>Técnico Universitario</option><option>Mushuc Runa</option>
-        <option>Delfín SC</option><option>Orense SC</option><option>Macará</option>
-        <option>Olmedo</option><option>Cumbayá FC</option><option>Universidad Católica</option>
-        <option>Deportivo Cuenca</option><option>Otro</option>
-      </select>
-    </div>
-    <button class="btn b-am full-w" onclick="doRegister()">Crear cuenta gratis</button>
-    <div class="modal-foot">¿Ya tienes cuenta? <a href="#" onclick="closeModal('modal-register');openModal('modal-login')">Inicia sesión</a></div>
-    <button class="modal-close" onclick="closeModal('modal-register')">✕</button>
-  </div>
-</div>
-
-<!-- SCRIPTS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="main.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>

@@ -57,7 +57,7 @@ const EQUIPOS = {
         svg: '<svg viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#1B5E20" stroke="#FFF" stroke-width="2"/><text x="20" y="17" text-anchor="middle" fill="#FFF" font-size="6" font-weight="bold">MANTA</text><text x="20" y="27" text-anchor="middle" fill="#FFD700" font-size="5">FC</text></svg>' }
 };
 
-// ===== DATOS FALLBACK — LigaPro 2026 Fecha 8 (12 Abril) =====
+// ===== DATOS FALLBACK â LigaPro 2026 Fecha 8 (12 Abril) =====
 const FALLBACK_STANDINGS = [
     { id: 'IDV', pj: 8, g: 6, e: 1, p: 1, gf: 16, gc: 8 },
     { id: 'UCA', pj: 8, g: 4, e: 4, p: 0, gf: 13, gc: 4 },
@@ -177,7 +177,7 @@ const RESULTADOS_PASADOS = [
     { jornada: 8, fecha: '2026-04-12', local: 'CUE', visitante: 'IDV', gl: 2, gv: 3 },
     { jornada: 8, fecha: '2026-04-12', local: 'GCY', visitante: 'MAC', gl: 2, gv: 1 },
     { jornada: 8, fecha: '2026-04-12', local: 'AUC', visitante: 'EME', gl: 2, gv: 0 }
-]];
+];
 
 const JORNADA_PRODE = [
     { jornada: 9, local: 'LDN', visitante: 'IDV' },

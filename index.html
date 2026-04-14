@@ -209,12 +209,14 @@
                     <h2>Mi Registro de Estadio</h2>
                 </div>
 
+                <!-- Sub-tabs: Mi Estadio / Historial -->
                 <div class="sub-tabs">
                     <button class="sub-tab active" data-subtab="resumen">Resumen</button>
                     <button class="sub-tab" data-subtab="historial">Historial Completo</button>
                     <button class="sub-tab" data-subtab="registrar">Registrar</button>
                 </div>
 
+                <!-- Sub: Resumen -->
                 <div class="sub-content active" id="subtab-resumen">
                     <div class="estadio-stats-grid" id="estadioStatsGrid">
                         <div class="estadio-stat-card total">
@@ -260,6 +262,7 @@
                     </div>
                 </div>
 
+                <!-- Sub: Historial Completo -->
                 <div class="sub-content" id="subtab-historial">
                     <div class="attendance-history">
                         <h4>Historial de Asistencias</h4>
@@ -269,6 +272,7 @@
                     </div>
                 </div>
 
+                <!-- Sub: Registrar -->
                 <div class="sub-content" id="subtab-registrar">
                     <div class="registro-actions">
                         <button class="btn btn-primary" id="btnRegistrarJornada">Registrar desde Jornada</button>
@@ -284,18 +288,32 @@
 
                     <div class="manual-form hidden" id="manualFormPanel">
                         <h4>Registro manual de asistencia</h4>
+                        <p class="form-hint">Cualquier partido: LigaPro, Copa, amistoso, de cualquier anio.</p>
                         <form id="manualAsistenciaForm">
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label>Fecha</label>
+                                    <label>Fecha del partido</label>
                                     <input type="date" id="inputFechaPartido" class="input-field" required>
                                 </div>
                                 <div class="form-group">
-                                    <label>Jornada (opcional)</label>
-                                    <input type="number" id="inputJornadaPartido" class="input-field" min="1" max="30" placeholder="Ej: 5">
+                                    <label>Tipo de torneo</label>
+                                    <select id="selectTipoTorneo" class="input-field">
+                                        <option value="LigaPro">LigaPro (Serie A)</option>
+                                        <option value="LigaPro B">LigaPro (Serie B)</option>
+                                        <option value="Copa Ecuador">Copa Ecuador</option>
+                                        <option value="Libertadores">Copa Libertadores</option>
+                                        <option value="Sudamericana">Copa Sudamericana</option>
+                                        <option value="Recopa">Recopa Sudamericana</option>
+                                        <option value="Amistoso">Amistoso</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
                                 </div>
                             </div>
                             <div class="form-row">
+                                <div class="form-group">
+                                    <label>Jornada (opcional)</label>
+                                    <input type="number" id="inputJornadaPartido" class="input-field" min="1" max="99" placeholder="Ej: 5">
+                                </div>
                                 <div class="form-group">
                                     <label>Condicion</label>
                                     <select id="selectLocalVisitante" class="input-field">
@@ -303,9 +321,15 @@
                                         <option value="visitante">Visitante</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div class="form-row">
                                 <div class="form-group">
                                     <label>Rival</label>
                                     <select id="selectRival" class="input-field"></select>
+                                </div>
+                                <div class="form-group" id="rivalManualGroup" style="display:none">
+                                    <label>Nombre del rival</label>
+                                    <input type="text" id="inputRivalManual" class="input-field" placeholder="Ej: El Nacional, Seleccion...">
                                 </div>
                             </div>
                             <div class="form-row score-row">
@@ -340,6 +364,7 @@
                 <button class="sub-tab" data-subtab="hinchas-perfiles">Hinchas</button>
             </div>
 
+            <!-- Foro General -->
             <div class="sub-content active" id="subtab-foro-general">
                 <div class="comment-input-area" id="foroGeneralInput">
                     <textarea placeholder="Escribe un comentario..." id="foroGeneralText"></textarea>
@@ -350,6 +375,7 @@
                 </div>
             </div>
 
+            <!-- Foro por Equipo -->
             <div class="sub-content" id="subtab-foro-equipo">
                 <div style="margin-bottom:12px">
                     <select class="input-field" id="foroEquipoSelect" style="max-width:250px">
@@ -365,6 +391,7 @@
                 </div>
             </div>
 
+            <!-- Foro por Jornada -->
             <div class="sub-content" id="subtab-foro-jornada">
                 <div style="margin-bottom:12px">
                     <select class="input-field" id="foroJornadaSelect" style="max-width:200px">
@@ -380,6 +407,7 @@
                 </div>
             </div>
 
+            <!-- Perfiles de Hinchas -->
             <div class="sub-content" id="subtab-hinchas-perfiles">
                 <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">Explora los perfiles de otros hinchas y sus estadisticas de asistencia al estadio.</p>
                 <div class="hincha-grid" id="hinchaGrid">
@@ -426,6 +454,7 @@
         </section>
     </main>
 
+    <!-- Auth Modal -->
     <div class="modal-overlay hidden" id="authModal">
         <div class="modal">
             <button class="modal-close" id="modalClose">✕</button>
@@ -445,9 +474,31 @@
                 </div>
                 <div class="form-group hidden" id="registerTeamGroup">
                     <label>Tu equipo</label>
-                    <select id="selectEquipo" class="input-field">
+                    <select id="selectEquipo" class="input-field" onchange="document.getElementById('equipoManualGroup').style.display=this.value==='_otro'?'':'none'">
                         <option value="">Selecciona tu equipo</option>
+                        <option value="IDV">Independiente del Valle</option>
+                        <option value="UCA">U. Catolica</option>
+                        <option value="BSC">Barcelona SC</option>
+                        <option value="AUC">Aucas</option>
+                        <option value="CUE">Dep. Cuenca</option>
+                        <option value="TEC">Tecnico U.</option>
+                        <option value="DLF">Delfin SC</option>
+                        <option value="MUS">Mushuc Runa</option>
+                        <option value="LDU">Liga de Quito</option>
+                        <option value="LIB">Libertad FC</option>
+                        <option value="MAC">Macara</option>
+                        <option value="GCY">Guayaquil City</option>
+                        <option value="OVA">Orense SC</option>
+                        <option value="LDN">Leones del Norte</option>
+                        <option value="EME">Emelec</option>
+                        <option value="MAN">Manta FC</option>
+                        <option value="NEUTRAL">Hincha neutral</option>
+                        <option value="_otro">Otro equipo (escribir)</option>
                     </select>
+                </div>
+                <div class="form-group hidden" id="equipoManualGroup" style="display:none">
+                    <label>Nombre del equipo</label>
+                    <input type="text" id="inputEquipoManual" class="input-field" placeholder="Ej: El Nacional, Deportivo Quito...">
                 </div>
                 <button type="submit" class="btn btn-primary btn-lg btn-block" id="btnAuthSubmit">Entrar</button>
                 <p class="modal-switch">
@@ -458,6 +509,7 @@
         </div>
     </div>
 
+    <!-- Create Liga Modal -->
     <div class="modal-overlay hidden" id="crearLigaModal">
         <div class="modal">
             <button class="modal-close" id="ligaModalClose">✕</button>

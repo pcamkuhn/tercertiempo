@@ -187,6 +187,9 @@ body {
 .team-cell { display: flex; align-items: center; gap: 8px; }
 .team-badge { width: 28px; height: 28px; flex-shrink: 0; }
 .team-badge svg { width: 100%; height: 100%; }
+.team-badge img { width: 100%; height: 100%; object-fit: contain; }
+.badge-fallback { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--gold-bg); border-radius: 50%; font-size: 9px; font-weight: 700; color: var(--gold); }
+.form-hint { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
 .team-name { font-weight: 600; white-space: nowrap; color: var(--text-primary); }
 .zone-libertadores { border-left: 3px solid var(--zone-titulo); }
 .zone-sudamericana { border-left: 3px solid var(--zone-sudamericana); }
@@ -308,7 +311,7 @@ body {
 .estadio-stat-card.losses .estadio-stat-num { color: var(--red); }
 .estadio-stat-label { font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; }
 
-/* Sub-tabs */
+/* Sub-tabs for Estadio */
 .sub-tabs { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
 .sub-tab {
     flex: 1; padding: 10px; text-align: center; font-size: 13px; font-weight: 700;
@@ -418,6 +421,16 @@ body {
 .empty-state-sm { color: var(--text-muted); text-align: center; padding: 16px; font-size: 13px; }
 
 /* ===== COMMUNITY / FORO ===== */
+.community-section { margin-top: 16px; }
+.foro-tabs { display: flex; gap: 0; margin-bottom: 16px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.foro-tab {
+    flex: 1; padding: 8px; text-align: center; font-size: 12px; font-weight: 700;
+    background: var(--bg-card); border: none; cursor: pointer;
+    color: var(--text-muted); transition: all 0.2s; font-family: inherit;
+}
+.foro-tab + .foro-tab { border-left: 1px solid var(--border); }
+.foro-tab.active { background: var(--gold); color: #fff; }
+
 .comment-input-area {
     display: flex; gap: 8px; margin-bottom: 16px;
 }
@@ -439,6 +452,9 @@ body {
 .comment-team-badge { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: var(--bg-body); color: var(--text-muted); font-weight: 600; }
 .comment-time { font-size: 11px; color: var(--text-muted); margin-left: auto; }
 .comment-body { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+.comment-actions { display: flex; gap: 12px; margin-top: 6px; }
+.comment-action { font-size: 11px; color: var(--text-muted); cursor: pointer; font-weight: 600; background: none; border: none; font-family: inherit; }
+.comment-action:hover { color: var(--gold); }
 
 /* Hincha Profiles */
 .hincha-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }

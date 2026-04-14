@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TercerTiempo — Prode, estadísticas y la hinchada del Ecuador</title>
+  <meta name="description" content="TercerTiempo: el prode oficial de la LigaPro Ecuador, ligas con amigos, y descubre si eres salado cuando vas al estadio."/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="logo-wrap">
+      <div class="logo"><span class="l-s">TERCER</span><span class="l-e"> </span><span class="l-c">TIEMPO</span></div>
+      <div class="logo-tag">Prode · LigaPro Ecuador · ¿Eres salado?</div>
+    </div>
+    <div class="hdr-right" id="user-btn-area">
+      <button class="btn b-am" onclick="openModal('modal-login')">Iniciar sesión</button>
+      <button class="btn b-outline" onclick="openModal('modal-register')">Registrarse</button>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav" id="main-nav">
+  <button class="ntab on" data-tab="tabla">🏆 Tabla 2026</button>
+  <button class="ntab" data-tab="stats">📊 Estadísticas</button>
+  <button class="ntab" data-tab="prode">🎯 Prode Global</button>
+  <button class="ntab auth-required" data-tab="ligas">👥 Mis Ligas</button>
+  <button class="ntab" data-tab="historial">🏟️ Hinchas</button>
+  <button class="ntab auth-required" data-tab="perfil">⚡ Mi Perfil</button>
+</nav>
+
+<!-- AUTH BANNER (visible when not logged in) -->
+<div id="auth-banner" class="auth-banner" style="display:none">
+  <span>🔒 Inicia sesión para acceder al Prode, Ligas, tu Historial y Perfil</span>
+  <button class="btn b-am btn-sm" onclick="openModal('modal-login')">Iniciar sesión</button>
+  <button class="btn b-outline btn-sm" onclick="openModal('modal-register')">Registrarse gratis</button>
+</div>
+
+<!-- SCREENS -->
+<main class="main">
+
+  <!-- ======= TABLA ======= -->
+  <section class="scr on" id="scr-tabla">
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-t">LigaPro Serie A 2026</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span id="tabla-update" class="update-chip"></span>
+          <span class="badge b-am">J<span id="jornada-actual">8</span> / 30</span>
+          <button class="btn b-outline btn-sm" onclick="fetchTabla()">↻ Actualizar</button>
+        </div>
+      </div>
+      <div id="tabla-loading" class="loading-bar"></div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th>#</th><th>Equipo</th><th>PJ</th><th>G</th><th>E</th><th>P</th>
+            <th>GF</th><th>GC</th><th>DG</th><th>Pts</th>
+          </tr></thead>
+          <tbody id="tbody-tabla"></tbody>
+        </table>
+      </div>
+      <div class="zona-legend">
+        <div class="zl-i"><div class="zl-b" style="background:var(--ver)"></div>Copa Libertadores</div>
+        <div class="zl-i"><div class="zl-b" style="background:var(--az)"></div>Sudamericana</div>
+        <div class="zl-i"><div class="zl-b" style="background:var(--ro)"></div>Descenso</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= STATS ======= -->
+  <section class="scr" id="scr-stats">
+    <div class="g4 mb1">
+      <div class="met"><div class="met-v" id="st-goles">—</div><div class="met-l">Goles totales</div></div>
+      <div class="met"><div class="met-v" id="st-jornadas">—</div><div class="met-l">Jornadas</div></div>
+      <div class="met"><div class="met-v st-ver" id="st-promedio">—</div><div class="met-l">Goles / partido</div></div>
+      <div class="met"><div class="met-v st-na" id="st-locales">—</div><div class="met-l">Victoria local</div></div>
+    </div>
+    <div class="g2 mb1">
+      <div class="card"><div class="card-t">⚽ Goleadores</div><div id="goleadores"></div></div>
+      <div class="card"><div class="card-t">🎯 Asistencias</div><div id="asistencias"></div></div>
+    </div>
+    <div class="g2">
+      <div class="card"><div class="card-t">🏹 Mejor ataque</div><div id="ataque"></div></div>
+      <div class="card"><div class="card-t">🛡️ Mejor defensa</div><div id="defensa"></div></div>
+    </div>
+  </section>
+
+  <!-- ======= PRODE ======= -->
+  <section class="scr" id="scr-prode">
+    <div class="hero-prode">
+      <div>
+        <div class="hero-t">Prode Global</div>
+        <div class="hero-sub">Jornada <span id="prode-jornada">13</span> · ¡Compite contra Ecuador entero!</div>
+      </div>
+      <div class="ph-stats">
+        <div class="ph-s"><div class="ph-v" id="ph-jug">0</div><div class="ph-l">Jugadores</div></div>
+        <div class="ph-s"><div class="ph-v ph-am" id="ph-pts">—</div><div class="ph-l">Tus pts</div></div>
+        <div class="ph-s"><div class="ph-v ph-na" id="ph-pos">—</div><div class="ph-l">Posición</div></div>
+      </div>
+    </div>
+    <div class="punt-box">Sistema: Resultado correcto <b>+1 pt</b> · Marcador exacto <b>+3 pts</b> · Máx. por jornada: <b>24 pts</b></div>
+    <div class="itabs" id="prode-tabs">
+      <button class="itab on" onclick="pTab('picks')">Mis pronósticos</button>
+      <button class="itab" onclick="pTab('ranking')">🏆 Ranking global</button>
+      <button class="itab" onclick="pTab('historial-p')">📅 Historial</button>
+    </div>
+    <div id="pt-picks">
+      <div id="fixture-loading" class="loading-bar"></div>
+      <div id="fixture"></div>
+      <div style="display:flex;gap:8px;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn b-am" onclick="guardarProde()">Guardar pronósticos</button>
+      </div>
+      <div id="prode-msg" style="margin-top:10px"></div>
+    </div>
+    <div id="pt-ranking" style="display:none">
+      <div class="card">
+        <div class="card-hdr">
+          <span class="card-t">Ranking — Jornada <span id="rank-j">13</span></span>
+          <span class="badge b-am" id="rank-badge">0 jugadores</span>
+        </div>
+        <div id="ranking-list"><div class="empty"><span class="empty-icon">🏆</span>Nadie ha jugado aún</div></div>
+      </div>
+      <div class="card">
+        <div class="card-t mb1">Ranking acumulado</div>
+        <div id="ranking-acum"><div class="empty"><span class="empty-icon">📊</span>Sin datos</div></div>
+      </div>
+    </div>
+    <div id="pt-historial-p" style="display:none">
+      <div class="card">
+        <div class="card-t mb1">Tu historial de pronósticos</div>
+        <div id="hist-jornadas"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======= LIGAS ======= -->
+  <section class="scr" id="scr-ligas">
+    <div class="itabs">
+      <button class="itab on" onclick="lTab('mis')">Mis ligas</button>
+      <button class="itab" onclick="lTab('crear')">➕ Crear liga</button>
+      <button class="itab" onclick="lTab('unirse')">🔑 Unirme</button>
+    </div>
+    <div id="lt-mis"></div>
+    <div id="lt-crear" style="display:none">
+      <div class="card">
+        <div class="card-t mb1">Crear nueva liga</div>
+        <div id="crear-msg"></div>
+        <div class="field"><label>Nombre de la liga</label><input id="l-nom" placeholder="Ej: Los Parceros del Trabajo"/></div>
+        <div class="field"><label>Descripción (opcional)</label><input id="l-desc" placeholder="Solo para los del barrio..."/></div>
+        <div class="field"><label>Tipo</label>
+          <select id="l-priv"><option value="1">Privada — solo por código</option><option value="0">Pública</option></select>
+        </div>
+        <button class="btn b-am" onclick="crearLiga()">Crear liga</button>
+      </div>
+    </div>
+    <div id="lt-unirse" style="display:none">
+      <div class="card">
+        <div class="card-t mb1">Unirse por código</div>
+        <div id="unirse-msg"></div>
+        <div class="field"><label>Código de liga</label><input id="l-cod-inp" placeholder="XYZABC" class="cod-input"/></div>
+        <button class="btn b-ver" onclick="unirse()">Unirme</button>
+      </div>
+    </div>
+    <div id="lt-detalle" style="display:none"></div>
+  </section>
+
+  <!-- ======= HINCHAS (público) ======= -->
+  <section class="scr" id="scr-historial">
+    <div class="itabs">
+      <button class="itab on" onclick="hTab('comunidad')">🏟️ Comunidad de hinchas</button>
+      <button class="itab" onclick="hTab('mis-partidos')">📋 Mis partidos</button>
+    </div>
+    <div id="ht-comunidad">
+      <div class="card" style="margin-bottom:1rem"><div style="font-size:13px;color:var(--muted);font-weight:600">Todos los hinchas de TercerTiempo. Click en cualquiera para ver su historial y saladez.</div></div>
+      <div id="comunidad-list"><div class="empty"><span class="empty-icon">⏳</span>Cargando hinchas...</div></div>
+    </div>
+    <div id="ht-mis-partidos" style="display:none">
+      <div id="mis-partidos-list"></div>
+    </div>
+    <div id="ht-perfil-usuario" style="display:none"></div>
+  </section>
+
+  <!-- ======= PERFIL ======= -->
+  <section class="scr" id="scr-perfil">
+    <div id="perfil-content"><div class="empty"><span class="empty-icon">⚡</span>Cargando...</div></div>
+  </section>
+
+</main>
+
+<!-- MODAL LOGIN -->
+<div class="modal-overlay" id="modal-login" style="display:none" onclick="overlayClose(event,'modal-login')">
+  <div class="modal-box">
+    <div class="modal-t">Bienvenido</div>
+    <div id="lmsg"></div>
+    <div class="field"><label>Usuario o email</label><input id="l-u" placeholder="tu@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Contraseña</label><input id="l-p" type="password" placeholder="••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+    <button class="btn b-am full-w" onclick="doLogin()">Entrar</button>
+    <div class="modal-foot">¿Sin cuenta? <a href="#" onclick="closeModal('modal-login');openModal('modal-register')">Regístrate gratis</a></div>
+    <button class="modal-close" onclick="closeModal('modal-login')">✕</button>
+  </div>
+</div>
+
+<!-- MODAL REGISTER -->
+<div class="modal-overlay" id="modal-register" style="display:none" onclick="overlayClose(event,'modal-register')">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-t">Crear cuenta</div>
+    <div id="rmsg"></div>
+    <div class="g2">
+      <div class="field"><label>Nombre completo</label><input id="r-n" placeholder="Juan Pérez" autocomplete="name"/></div>
+      <div class="field"><label>Usuario</label><input id="r-u" placeholder="juanperez" autocomplete="username"/></div>
+    </div>
+    <div class="field"><label>Email</label><input id="r-e" type="email" placeholder="tu@email.com" autocomplete="email"/></div>
+    <div class="field"><label>Contraseña</label><input id="r-p" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/></div>
+    <div class="field"><label>Tu equipo favorito</label>
+      <select id="r-eq">
+        <option value="">Selecciona...</option>
+        <option>Barcelona SC</option><option>Emelec</option><option>Liga de Quito</option>
+        <option>Independiente del Valle</option><option>Aucas</option><option>Deportivo Quito</option>
+        <option>El Nacional</option><option>Técnico Universitario</option><option>Mushuc Runa</option>
+        <option>Delfín SC</option><option>Orense SC</option><option>Macará</option>
+        <option>Olmedo</option><option>Cumbayá FC</option><option>Universidad Católica</option>
+        <option>Deportivo Cuenca</option><option>Otro</option>
+      </select>
+    </div>
+    <button class="btn b-am full-w" onclick="doRegister()">Crear cuenta gratis</button>
+    <div class="modal-foot">¿Ya tienes cuenta? <a href="#" onclick="closeModal('modal-register');openModal('modal-login')">Inicia sesión</a></div>
+    <button class="modal-close" onclick="closeModal('modal-register')">✕</button>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="main.js"></script>
+</body>
+</html>

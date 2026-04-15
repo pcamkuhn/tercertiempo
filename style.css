@@ -713,3 +713,24 @@ body {
     .prode-input { width: 38px; height: 38px; font-size: 16px; }
     .hincha-grid { grid-template-columns: 1fr; }
 }
+
+/* ===== COMUNIDAD PREDICCIONES ===== */
+.prode-comunidad { margin-top: 2rem; }
+.prode-comunidad h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.25rem; }
+.prode-comunidad-sub { color: #888; font-size: 0.85rem; margin-bottom: 1rem; }
+.comunidad-preds-list { display: flex; flex-direction: column; gap: 1rem; }
+.comunidad-user { background: #fff; border-radius: 12px; border: 1px solid #eee; overflow: hidden; }
+.comunidad-user.comunidad-me { border-color: #D4A843; border-width: 2px; }
+.comunidad-user-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: #f9f9f9; border-bottom: 1px solid #eee; }
+.comunidad-me .comunidad-user-header { background: #fdf6e3; }
+.comunidad-name { font-weight: 600; font-size: 0.95rem; }
+.comunidad-count { color: #888; font-size: 0.8rem; }
+.comunidad-user-preds { padding: 0.5rem; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; }
+.comunidad-pred { display: flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.6rem; background: #f5f5f5; border-radius: 8px; font-size: 0.85rem; }
+.comunidad-logo { width: 20px; height: 20px; object-fit: contain; }
+.comunidad-team { font-weight: 500; min-width: 30px; }
+.comunidad-score { font-weight: 700; color: #1a5632; background: #e8f5e9; padding: 2px 8px; border-radius: 4px; }
+.comunidad-me .comunidad-score { background: #fff3e0; color: #e65100; }
+@media (max-width: 600px) {
+    .comunidad-user-preds { grid-template-columns: 1fr; }
+}

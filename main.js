@@ -221,41 +221,205 @@ const CALENDARIO_FECHAS = [
         { local: 'DLF', visitante: 'MUS', dia: '2026-05-03' },
         { local: 'LDN', visitante: 'EME', dia: '2026-05-03' }
     ]},
-    // Fecha 13 (8-10 Mayo)
+    // Fecha 13 (8-11 Mayo)
     { fecha: 13, inicio: '2026-05-08', partidos: [
         { local: 'OVA', visitante: 'LDN', dia: '2026-05-08' },
-        { local: 'IDV', visitante: 'BSC', dia: '2026-05-09' },
         { local: 'TEC', visitante: 'DLF', dia: '2026-05-09' },
-        { local: 'EME', visitante: 'MAC', dia: '2026-05-09' },
-        { local: 'GCY', visitante: 'CUE', dia: '2026-05-10' },
+        { local: 'GCY', visitante: 'CUE', dia: '2026-05-09' },
+        { local: 'IDV', visitante: 'BSC', dia: '2026-05-09' },
         { local: 'AUC', visitante: 'UCA', dia: '2026-05-10' },
-        { local: 'MUS', visitante: 'LIB', dia: '2026-05-10' },
-        { local: 'MAN', visitante: 'LDU', dia: '2026-05-10' }
+        { local: 'EME', visitante: 'LIB', dia: '2026-05-10' },
+        { local: 'MAN', visitante: 'MAC', dia: '2026-05-10' },
+        { local: 'MUS', visitante: 'LDU', dia: '2026-05-11' }
     ]},
-    // Fecha 14 (15-17 Mayo)
+    // Fecha 14 (15-18 Mayo)
     { fecha: 14, inicio: '2026-05-15', partidos: [
-        { local: 'BSC', visitante: 'AUC', dia: '2026-05-15' },
+        { local: 'LIB', visitante: 'CUE', dia: '2026-05-15' },
+        { local: 'MAC', visitante: 'IDV', dia: '2026-05-16' },
         { local: 'LDU', visitante: 'TEC', dia: '2026-05-16' },
-        { local: 'UCA', visitante: 'MUS', dia: '2026-05-16' },
-        { local: 'LIB', visitante: 'EME', dia: '2026-05-16' },
-        { local: 'CUE', visitante: 'LDN', dia: '2026-05-17' },
-        { local: 'DLF', visitante: 'OVA', dia: '2026-05-17' },
-        { local: 'MAC', visitante: 'GCY', dia: '2026-05-17' },
-        { local: 'IDV', visitante: 'MAN', dia: '2026-05-17' }
+        { local: 'BSC', visitante: 'AUC', dia: '2026-05-16' },
+        { local: 'LDN', visitante: 'MUS', dia: '2026-05-17' },
+        { local: 'UCA', visitante: 'DLF', dia: '2026-05-17' },
+        { local: 'MAN', visitante: 'EME', dia: '2026-05-17' },
+        { local: 'GCY', visitante: 'OVA', dia: '2026-05-18' }
     ]},
-    // Fecha 15 (22-24 Mayo)
+    // Fecha 15 (22-25 Mayo)
     { fecha: 15, inicio: '2026-05-22', partidos: [
-        { local: 'TEC', visitante: 'CUE', dia: '2026-05-22' },
-        { local: 'GCY', visitante: 'DLF', dia: '2026-05-23' },
-        { local: 'LDN', visitante: 'BSC', dia: '2026-05-23' },
-        { local: 'MAN', visitante: 'LIB', dia: '2026-05-23' },
-        { local: 'OVA', visitante: 'UCA', dia: '2026-05-24' },
-        { local: 'AUC', visitante: 'IDV', dia: '2026-05-24' },
-        { local: 'MUS', visitante: 'LDU', dia: '2026-05-24' },
-        { local: 'EME', visitante: 'MAC', dia: '2026-05-24' }
+        { local: 'IDV', visitante: 'LIB', dia: '2026-05-22' },
+        { local: 'MUS', visitante: 'GCY', dia: '2026-05-23' },
+        { local: 'OVA', visitante: 'UCA', dia: '2026-05-23' },
+        { local: 'CUE', visitante: 'LDU', dia: '2026-05-23' },
+        { local: 'TEC', visitante: 'LDN', dia: '2026-05-24' },
+        { local: 'EME', visitante: 'MAC', dia: '2026-05-24' },
+        { local: 'DLF', visitante: 'BSC', dia: '2026-05-24' },
+        { local: 'AUC', visitante: 'MAN', dia: '2026-05-25' }
+    ]},
+    // Fecha 16 (30 Mayo - 1 Junio)
+    { fecha: 16, inicio: '2026-05-30', partidos: [
+        { local: 'MAN', visitante: 'LIB', dia: '2026-05-30' },
+        { local: 'LDU', visitante: 'OVA', dia: '2026-05-30' },
+        { local: 'CUE', visitante: 'DLF', dia: '2026-05-30' },
+        { local: 'MUS', visitante: 'AUC', dia: '2026-05-31' },
+        { local: 'GCY', visitante: 'IDV', dia: '2026-05-31' },
+        { local: 'EME', visitante: 'UCA', dia: '2026-05-31' },
+        { local: 'LDN', visitante: 'MAC', dia: '2026-06-01' },
+        { local: 'TEC', visitante: 'BSC', dia: '2026-06-01' }
+    ]},
+    // Fecha 17 (1 Julio)
+    { fecha: 17, inicio: '2026-07-01', partidos: [
+        { local: 'DLF', visitante: 'EME', dia: '2026-07-01' },
+        { local: 'AUC', visitante: 'GCY', dia: '2026-07-01' },
+        { local: 'MAC', visitante: 'LDU', dia: '2026-07-01' },
+        { local: 'OVA', visitante: 'TEC', dia: '2026-07-01' },
+        { local: 'UCA', visitante: 'MUS', dia: '2026-07-01' },
+        { local: 'IDV', visitante: 'MAN', dia: '2026-07-01' },
+        { local: 'BSC', visitante: 'CUE', dia: '2026-07-01' },
+        { local: 'LIB', visitante: 'LDN', dia: '2026-07-01' }
+    ]},
+    // Fecha 18 (5 Julio)
+    { fecha: 18, inicio: '2026-07-05', partidos: [
+        { local: 'EME', visitante: 'BSC', dia: '2026-07-05' },
+        { local: 'LDN', visitante: 'UCA', dia: '2026-07-05' },
+        { local: 'CUE', visitante: 'AUC', dia: '2026-07-05' },
+        { local: 'MUS', visitante: 'IDV', dia: '2026-07-05' },
+        { local: 'TEC', visitante: 'MAC', dia: '2026-07-05' },
+        { local: 'GCY', visitante: 'DLF', dia: '2026-07-05' },
+        { local: 'MAN', visitante: 'OVA', dia: '2026-07-05' },
+        { local: 'LDU', visitante: 'LIB', dia: '2026-07-05' }
+    ]},
+    // Fecha 19 (12 Julio)
+    { fecha: 19, inicio: '2026-07-12', partidos: [
+        { local: 'OVA', visitante: 'EME', dia: '2026-07-12' },
+        { local: 'BSC', visitante: 'GCY', dia: '2026-07-12' },
+        { local: 'UCA', visitante: 'LDU', dia: '2026-07-12' },
+        { local: 'AUC', visitante: 'IDV', dia: '2026-07-12' },
+        { local: 'LIB', visitante: 'TEC', dia: '2026-07-12' },
+        { local: 'MAC', visitante: 'MUS', dia: '2026-07-12' },
+        { local: 'MAN', visitante: 'DLF', dia: '2026-07-12' },
+        { local: 'LDN', visitante: 'CUE', dia: '2026-07-12' }
+    ]},
+    // Fecha 20 (15 Julio)
+    { fecha: 20, inicio: '2026-07-15', partidos: [
+        { local: 'IDV', visitante: 'EME', dia: '2026-07-15' },
+        { local: 'CUE', visitante: 'UCA', dia: '2026-07-15' },
+        { local: 'TEC', visitante: 'AUC', dia: '2026-07-15' },
+        { local: 'DLF', visitante: 'MAC', dia: '2026-07-15' },
+        { local: 'GCY', visitante: 'MAN', dia: '2026-07-15' },
+        { local: 'MUS', visitante: 'OVA', dia: '2026-07-15' },
+        { local: 'BSC', visitante: 'LIB', dia: '2026-07-15' },
+        { local: 'LDU', visitante: 'LDN', dia: '2026-07-15' }
+    ]},
+    // Fecha 21 (19 Julio)
+    { fecha: 21, inicio: '2026-07-19', partidos: [
+        { local: 'UCA', visitante: 'BSC', dia: '2026-07-19' },
+        { local: 'LDN', visitante: 'GCY', dia: '2026-07-19' },
+        { local: 'MAN', visitante: 'LDU', dia: '2026-07-19' },
+        { local: 'OVA', visitante: 'AUC', dia: '2026-07-19' },
+        { local: 'IDV', visitante: 'TEC', dia: '2026-07-19' },
+        { local: 'EME', visitante: 'MUS', dia: '2026-07-19' },
+        { local: 'LIB', visitante: 'DLF', dia: '2026-07-19' },
+        { local: 'MAC', visitante: 'CUE', dia: '2026-07-19' }
+    ]},
+    // Fecha 22 (26 Julio)
+    { fecha: 22, inicio: '2026-07-26', partidos: [
+        { local: 'CUE', visitante: 'EME', dia: '2026-07-26' },
+        { local: 'BSC', visitante: 'LDU', dia: '2026-07-26' },
+        { local: 'GCY', visitante: 'UCA', dia: '2026-07-26' },
+        { local: 'OVA', visitante: 'IDV', dia: '2026-07-26' },
+        { local: 'AUC', visitante: 'MAC', dia: '2026-07-26' },
+        { local: 'TEC', visitante: 'MAN', dia: '2026-07-26' },
+        { local: 'MUS', visitante: 'LIB', dia: '2026-07-26' },
+        { local: 'DLF', visitante: 'LDN', dia: '2026-07-26' }
+    ]},
+    // Fecha 23 (2 Agosto)
+    { fecha: 23, inicio: '2026-08-02', partidos: [
+        { local: 'LDN', visitante: 'BSC', dia: '2026-08-02' },
+        { local: 'MAC', visitante: 'GCY', dia: '2026-08-02' },
+        { local: 'EME', visitante: 'AUC', dia: '2026-08-02' },
+        { local: 'UCA', visitante: 'TEC', dia: '2026-08-02' },
+        { local: 'MAN', visitante: 'MUS', dia: '2026-08-02' },
+        { local: 'LDU', visitante: 'DLF', dia: '2026-08-02' },
+        { local: 'LIB', visitante: 'OVA', dia: '2026-08-02' },
+        { local: 'IDV', visitante: 'CUE', dia: '2026-08-02' }
+    ]},
+    // Fecha 24 (9 Agosto)
+    { fecha: 24, inicio: '2026-08-09', partidos: [
+        { local: 'GCY', visitante: 'EME', dia: '2026-08-09' },
+        { local: 'LIB', visitante: 'UCA', dia: '2026-08-09' },
+        { local: 'LDU', visitante: 'IDV', dia: '2026-08-09' },
+        { local: 'BSC', visitante: 'MAC', dia: '2026-08-09' },
+        { local: 'TEC', visitante: 'MUS', dia: '2026-08-09' },
+        { local: 'CUE', visitante: 'MAN', dia: '2026-08-09' },
+        { local: 'DLF', visitante: 'OVA', dia: '2026-08-09' },
+        { local: 'AUC', visitante: 'LDN', dia: '2026-08-09' }
+    ]},
+    // Fecha 25 (16 Agosto)
+    { fecha: 25, inicio: '2026-08-16', partidos: [
+        { local: 'MUS', visitante: 'BSC', dia: '2026-08-16' },
+        { local: 'AUC', visitante: 'LDU', dia: '2026-08-16' },
+        { local: 'MAC', visitante: 'UCA', dia: '2026-08-16' },
+        { local: 'EME', visitante: 'TEC', dia: '2026-08-16' },
+        { local: 'IDV', visitante: 'DLF', dia: '2026-08-16' },
+        { local: 'OVA', visitante: 'CUE', dia: '2026-08-16' },
+        { local: 'GCY', visitante: 'LIB', dia: '2026-08-16' },
+        { local: 'MAN', visitante: 'LDN', dia: '2026-08-16' }
+    ]},
+    // Fecha 26 (23 Agosto)
+    { fecha: 26, inicio: '2026-08-23', partidos: [
+        { local: 'LDU', visitante: 'EME', dia: '2026-08-23' },
+        { local: 'TEC', visitante: 'GCY', dia: '2026-08-23' },
+        { local: 'DLF', visitante: 'AUC', dia: '2026-08-23' },
+        { local: 'LDN', visitante: 'IDV', dia: '2026-08-23' },
+        { local: 'LIB', visitante: 'MAC', dia: '2026-08-23' },
+        { local: 'CUE', visitante: 'MUS', dia: '2026-08-23' },
+        { local: 'UCA', visitante: 'MAN', dia: '2026-08-23' },
+        { local: 'BSC', visitante: 'OVA', dia: '2026-08-23' }
+    ]},
+    // Fecha 27 (30 Agosto)
+    { fecha: 27, inicio: '2026-08-30', partidos: [
+        { local: 'MAN', visitante: 'BSC', dia: '2026-08-30' },
+        { local: 'GCY', visitante: 'LDU', dia: '2026-08-30' },
+        { local: 'IDV', visitante: 'UCA', dia: '2026-08-30' },
+        { local: 'OVA', visitante: 'MAC', dia: '2026-08-30' },
+        { local: 'MUS', visitante: 'DLF', dia: '2026-08-30' },
+        { local: 'TEC', visitante: 'CUE', dia: '2026-08-30' },
+        { local: 'AUC', visitante: 'LIB', dia: '2026-08-30' },
+        { local: 'EME', visitante: 'LDN', dia: '2026-08-30' }
+    ]},
+    // Fecha 28 (2 Septiembre)
+    { fecha: 28, inicio: '2026-09-02', partidos: [
+        { local: 'LIB', visitante: 'EME', dia: '2026-09-02' },
+        { local: 'CUE', visitante: 'GCY', dia: '2026-09-02' },
+        { local: 'UCA', visitante: 'AUC', dia: '2026-09-02' },
+        { local: 'BSC', visitante: 'IDV', dia: '2026-09-02' },
+        { local: 'DLF', visitante: 'TEC', dia: '2026-09-02' },
+        { local: 'LDU', visitante: 'MUS', dia: '2026-09-02' },
+        { local: 'MAC', visitante: 'MAN', dia: '2026-09-02' },
+        { local: 'LDN', visitante: 'OVA', dia: '2026-09-02' }
+    ]},
+    // Fecha 29 (6 Septiembre)
+    { fecha: 29, inicio: '2026-09-06', partidos: [
+        { local: 'AUC', visitante: 'BSC', dia: '2026-09-06' },
+        { local: 'OVA', visitante: 'GCY', dia: '2026-09-06' },
+        { local: 'TEC', visitante: 'LDU', dia: '2026-09-06' },
+        { local: 'DLF', visitante: 'UCA', dia: '2026-09-06' },
+        { local: 'IDV', visitante: 'MAC', dia: '2026-09-06' },
+        { local: 'EME', visitante: 'MAN', dia: '2026-09-06' },
+        { local: 'CUE', visitante: 'LIB', dia: '2026-09-06' },
+        { local: 'MUS', visitante: 'LDN', dia: '2026-09-06' }
+    ]},
+    // Fecha 30 (13 Septiembre)
+    { fecha: 30, inicio: '2026-09-13', partidos: [
+        { local: 'MAC', visitante: 'EME', dia: '2026-09-13' },
+        { local: 'MAN', visitante: 'AUC', dia: '2026-09-13' },
+        { local: 'LIB', visitante: 'IDV', dia: '2026-09-13' },
+        { local: 'LDN', visitante: 'TEC', dia: '2026-09-13' },
+        { local: 'GCY', visitante: 'MUS', dia: '2026-09-13' },
+        { local: 'BSC', visitante: 'DLF', dia: '2026-09-13' },
+        { local: 'UCA', visitante: 'OVA', dia: '2026-09-13' },
+        { local: 'LDU', visitante: 'CUE', dia: '2026-09-13' }
     ]}
 ];
-// Fechas 16-30 = vuelta (se generan invirtiendo local/visitante de fechas 1-15)
 
 // ===== APP STATE =====
 let currentUser = null;
@@ -661,36 +825,6 @@ function renderCalendario() {
         });
         html += '</div></div>';
     });
-
-    for (let j = 16; j <= 30; j++) {
-        const srcJ = j - 15;
-        const srcMatches = srcJ <= 8 ? (pastJornadas[srcJ] || []) :
-            (CALENDARIO_FECHAS.find(c => c.fecha === srcJ)?.partidos || []);
-        html += '<div class="calendario-jornada">';
-        html += '<div class="calendario-header" data-jornada="' + j + '">';
-        html += '<span class="calendario-fecha-num">Fecha ' + j + '</span>';
-        html += '<span class="calendario-fecha-date">Por definir</span>';
-        html += '<span class="calendario-status proxima">Vuelta</span>';
-        html += '<span class="calendario-toggle">&#9660;</span>';
-        html += '</div>';
-        html += '<div class="calendario-body" id="calBody' + j + '" style="display:none">';
-        srcMatches.forEach(m => {
-            const localKey = m.visitante || m.local;
-            const visitKey = m.local || m.visitante;
-            const eqL = EQUIPOS[localKey] || { nombre: localKey, logo: '' };
-            const eqV = EQUIPOS[visitKey] || { nombre: visitKey, logo: '' };
-            html += '<div class="calendario-match proxima">';
-            html += '<div class="cal-team cal-home">';
-            html += '<img src="' + eqL.logo + '" alt="" class="cal-logo">';
-            html += '<span>' + eqL.nombre + '</span></div>';
-            html += '<div class="cal-score cal-vs">vs</div>';
-            html += '<div class="cal-team cal-away">';
-            html += '<span>' + eqV.nombre + '</span>';
-            html += '<img src="' + eqV.logo + '" alt="" class="cal-logo"></div>';
-            html += '</div>';
-        });
-        html += '</div></div>';
-    }
 
     container.innerHTML = html;
 

@@ -655,6 +655,10 @@ async function logout() {
 }
 
 // ===== LIGAS PRIVADAS =====
+let localLigas = [];
+let currentLiga = null;
+let currentLigaTab = 'ranking';
+
 function initLigas() {
     document.getElementById('btnCrearLiga')?.addEventListener('click', () => {
         if (!currentUser) { showToast('Inicia sesion para crear una liga'); openAuthModal('login'); return; }
@@ -670,13 +674,12 @@ function initLigas() {
     document.getElementById('btnUnirseLiga')?.addEventListener('click', unirseLiga);
     document.getElementById('btnVolverLigas')?.addEventListener('click', () => {
         document.getElementById('ligaDetail')?.classList.add('hidden');
+        document.getElementById('ligasList')?.parentElement.querySelector('.ligas-actions')?.classList.remove('hidden');
         document.getElementById('ligasList')?.classList.remove('hidden');
+        currentLiga = null;
     });
     loadLigas();
 }
-
-// Local storage for ligas when Supabase tables don't exist
-let localLigas = [];
 
 async function crearLiga(e) {
     e.preventDefault();
@@ -696,13 +699,12 @@ async function crearLiga(e) {
             success = true;
         } catch (err) {
             console.warn('Supabase ligas insert failed, using local storage:', err);
-            // Fallback to local
-            const liga = { id: 'local_' + Date.now(), nombre, codigo, creador_id: currentUser.id };
+            const liga = { id: 'local_' + Date.now(), nombre, codigo, creador_id: currentUser.id, miembros: [{ user_id: currentUser.id, nombre: currentUser.user_metadata?.nombre || currentUser.email?.split('@')[0] || 'Tu' }] };
             localLigas.push(liga);
             success = true;
         }
     } else {
-        const liga = { id: 'local_' + Date.now(), nombre, codigo, creador_id: currentUser.id };
+        const liga = { id: 'local_' + Date.now(), nombre, codigo, creador_id: currentUser.id, miembros: [{ user_id: currentUser.id, nombre: currentUser.user_metadata?.nombre || currentUser.email?.split('@')[0] || 'Tu' }] };
         localLigas.push(liga);
         success = true;
     }
@@ -719,6 +721,20 @@ async function unirseLiga() {
     if (!currentUser) { showToast('Inicia sesion primero'); openAuthModal('login'); return; }
     const codigo = document.getElementById('inputCodigoLiga')?.value.trim();
     if (!codigo) { showToast('Ingresa un codigo de liga'); return; }
+
+    // Check local ligas first
+    const localLiga = localLigas.find(l => l.codigo === codigo.toUpperCase());
+    if (localLiga) {
+        if (!localLiga.miembros) localLiga.miembros = [];
+        if (!localLiga.miembros.find(m => m.user_id === currentUser.id)) {
+            localLiga.miembros.push({ user_id: currentUser.id, nombre: currentUser.user_metadata?.nombre || currentUser.email?.split('@')[0] || 'Tu' });
+        }
+        showToast('Te has unido a "' + localLiga.nombre + '".');
+        document.getElementById('inputCodigoLiga').value = '';
+        loadLigas();
+        return;
+    }
+
     if (supabaseClient) {
         try {
             const { data: liga, error } = await supabaseClient.from('ligas').select('id, nombre').eq('codigo', codigo.toUpperCase()).single();
@@ -728,7 +744,7 @@ async function unirseLiga() {
             document.getElementById('inputCodigoLiga').value = '';
             loadLigas();
         } catch (err) { showToast('Error al unirse'); console.error(err); }
-    } else { showToast('Unido a liga (demo)'); }
+    } else { showToast('Codigo no encontrado'); }
 }
 
 async function loadLigas() {
@@ -737,7 +753,6 @@ async function loadLigas() {
     if (!container) return;
     let allLigas = [];
 
-    // Try Supabase first
     if (supabaseClient) {
         try {
             const { data: memberships } = await supabaseClient.from('liga_miembros')
@@ -748,18 +763,299 @@ async function loadLigas() {
         } catch (e) { console.warn('Ligas load from Supabase failed:', e); }
     }
 
-    // Add local ligas
+    // Add local ligas where user is member
     localLigas.forEach(l => {
-        if (!allLigas.find(x => x.codigo === l.codigo)) allLigas.push(l);
+        if (!allLigas.find(x => x.codigo === l.codigo)) {
+            if (l.creador_id === currentUser.id || (l.miembros && l.miembros.find(m => m.user_id === currentUser.id))) {
+                allLigas.push(l);
+            }
+        }
     });
 
     if (allLigas.length > 0) {
         container.innerHTML = allLigas.map(l =>
-            '<div class="liga-card"><div class="liga-card-info"><h4>' + l.nombre + '</h4><p>Codigo: ' + l.codigo + '</p></div><span class="liga-card-members">&#8594;</span></div>'
+            '<div class="liga-card" data-liga-id="' + l.id + '" data-liga-codigo="' + l.codigo + '">' +
+            '<div class="liga-card-info"><h4>' + l.nombre + '</h4><p>Codigo: ' + l.codigo + '</p></div>' +
+            '<span class="liga-card-arrow">&#8594;</span></div>'
         ).join('');
+        container.querySelectorAll('.liga-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const ligaId = card.dataset.ligaId;
+                const liga = allLigas.find(l => String(l.id) === ligaId);
+                if (liga) openLigaDetail(liga);
+            });
+        });
     } else {
         container.innerHTML = '<div class="empty-state-sm">No tienes ligas aun. Crea una o unete con un codigo.</div>';
     }
+}
+
+async function openLigaDetail(liga) {
+    currentLiga = liga;
+    currentLigaTab = 'ranking';
+    document.getElementById('ligasList')?.classList.add('hidden');
+    document.getElementById('ligasList')?.parentElement.querySelector('.ligas-actions')?.classList.add('hidden');
+    const detail = document.getElementById('ligaDetail');
+    if (!detail) return;
+    detail.classList.remove('hidden');
+
+    const header = document.getElementById('ligaHeader');
+    if (header) {
+        header.innerHTML = '<h2>' + liga.nombre + '</h2>' +
+            '<div class="liga-meta"><span class="liga-codigo-badge">Codigo: ' + liga.codigo + '</span></div>' +
+            '<div class="liga-tabs">' +
+            '<button class="liga-tab-btn active" data-ltab="ranking">Ranking</button>' +
+            '<button class="liga-tab-btn" data-ltab="jornadas">Jornadas</button>' +
+            '<button class="liga-tab-btn" data-ltab="miembros">Miembros</button>' +
+            '</div>';
+        header.querySelectorAll('.liga-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                header.querySelectorAll('.liga-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentLigaTab = btn.dataset.ltab;
+                renderLigaTab();
+            });
+        });
+    }
+
+    await loadLigaMembers(liga);
+    renderLigaTab();
+}
+
+async function loadLigaMembers(liga) {
+    liga._members = [];
+
+    // For local ligas, use stored miembros
+    if (String(liga.id).startsWith('local_')) {
+        liga._members = (liga.miembros || []).map(m => ({
+            user_id: m.user_id,
+            nombre: m.nombre || 'Usuario',
+            puntos: 0
+        }));
+        // Calculate prode points from local data
+        await calcLigaMemberPoints(liga);
+        return;
+    }
+
+    // From Supabase: get members with profile info
+    if (supabaseClient) {
+        try {
+            const { data: members } = await supabaseClient.from('liga_miembros')
+                .select('user_id, perfiles(id, nombre, equipo)')
+                .eq('liga_id', liga.id);
+            if (members) {
+                liga._members = members.map(m => ({
+                    user_id: m.user_id,
+                    nombre: m.perfiles?.nombre || 'Usuario',
+                    equipo: m.perfiles?.equipo || null,
+                    puntos: 0
+                }));
+            }
+        } catch (e) { console.warn('Error loading liga members:', e); }
+    }
+
+    await calcLigaMemberPoints(liga);
+}
+
+// Calculate prode points for all liga members across all completed jornadas
+async function calcLigaMemberPoints(liga) {
+    if (!liga._members || liga._members.length === 0) return;
+
+    // Get all completed jornadas (1-8)
+    const completedJornadas = [];
+    for (let j = 1; j <= 8; j++) {
+        const matches = RESULTADOS_PASADOS.filter(r => r.jornada === j);
+        if (matches.length > 0) completedJornadas.push({ jornada: j, matches });
+    }
+
+    // Get pronosticos for all members of this liga
+    if (supabaseClient && !String(liga.id).startsWith('local_')) {
+        const userIds = liga._members.map(m => m.user_id);
+        try {
+            const { data: pronosticos } = await supabaseClient.from('pronosticos')
+                .select('user_id, jornada, partido_idx, gol_local, gol_visitante')
+                .in('user_id', userIds)
+                .in('jornada', completedJornadas.map(j => j.jornada));
+
+            if (pronosticos) {
+                liga._members.forEach(member => {
+                    let totalPts = 0;
+                    member.jornada_pts = {};
+                    completedJornadas.forEach(cj => {
+                        let jornadaPts = 0;
+                        const myPreds = pronosticos.filter(p => p.user_id === member.user_id && p.jornada === cj.jornada);
+                        myPreds.forEach(pred => {
+                            const match = cj.matches[pred.partido_idx];
+                            if (match) {
+                                jornadaPts += calcMatchPoints(pred.gol_local, pred.gol_visitante, match.gl, match.gv);
+                            }
+                        });
+                        member.jornada_pts[cj.jornada] = jornadaPts;
+                        totalPts += jornadaPts;
+                    });
+                    member.puntos = totalPts;
+                });
+            }
+        } catch (e) { console.warn('Error loading pronosticos:', e); }
+    }
+
+    // Sort by points descending
+    liga._members.sort((a, b) => b.puntos - a.puntos);
+}
+
+// +3 pts for exact score, +1 pt for correct result (win/draw/loss)
+function calcMatchPoints(predL, predV, realL, realV) {
+    predL = parseInt(predL); predV = parseInt(predV);
+    if (isNaN(predL) || isNaN(predV)) return 0;
+    // Exact score
+    if (predL === realL && predV === realV) return 3;
+    // Correct result (tendency)
+    const predResult = predL > predV ? 'L' : predL < predV ? 'V' : 'E';
+    const realResult = realL > realV ? 'L' : realL < realV ? 'V' : 'E';
+    if (predResult === realResult) return 1;
+    return 0;
+}
+
+function renderLigaTab() {
+    const content = document.getElementById('ligaTabContent');
+    if (!content || !currentLiga) return;
+
+    if (currentLigaTab === 'ranking') {
+        renderLigaRanking(content);
+    } else if (currentLigaTab === 'jornadas') {
+        renderLigaJornadas(content);
+    } else if (currentLigaTab === 'miembros') {
+        renderLigaMiembros(content);
+    }
+}
+
+function renderLigaRanking(container) {
+    const members = currentLiga._members || [];
+    if (members.length === 0) {
+        container.innerHTML = '<div class="empty-state-sm">No hay miembros en esta liga.</div>';
+        return;
+    }
+
+    let html = '<div class="liga-ranking">';
+    html += '<div class="ranking-header-row"><span class="rk-pos">#</span><span class="rk-name">Jugador</span><span class="rk-pts">Pts</span></div>';
+    members.forEach((m, i) => {
+        const posClass = i === 0 ? ' rk-gold' : i === 1 ? ' rk-silver' : i === 2 ? ' rk-bronze' : '';
+        const isMe = currentUser && m.user_id === currentUser.id;
+        html += '<div class="ranking-row' + posClass + (isMe ? ' rk-me' : '') + '">' +
+            '<span class="rk-pos">' + (i + 1) + '</span>' +
+            '<span class="rk-name">' + m.nombre + (isMe ? ' <em>(tu)</em>' : '') + '</span>' +
+            '<span class="rk-pts">' + m.puntos + '</span></div>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+function renderLigaJornadas(container) {
+    // Get all jornadas (1-8 completed + 9 active)
+    const maxJornada = 9;
+    let html = '<div class="liga-jornadas">';
+
+    for (let j = maxJornada; j >= 1; j--) {
+        const matches = RESULTADOS_PASADOS.filter(r => r.jornada === j);
+        const isActive = j === 9;
+        const isFuture = matches.length === 0 && isActive;
+
+        html += '<div class="jornada-block' + (isActive ? ' jornada-active' : '') + '">';
+        html += '<div class="jornada-header" data-jornada="' + j + '">' +
+            '<h4>Jornada ' + j + (isActive ? ' <span class="jornada-live">EN CURSO</span>' : '') + '</h4>' +
+            '<span class="jornada-toggle">&#9660;</span></div>';
+        html += '<div class="jornada-body hidden" id="jornadaBody' + j + '">';
+
+        if (isActive) {
+            // Jornada 9 - show prode matches
+            html += '<div class="jornada-matches">';
+            JORNADA_PRODE.forEach(m => {
+                const loc = EQUIPOS[m.local] || { corto: m.local, logo: '' };
+                const vis = EQUIPOS[m.visitante] || { corto: m.visitante, logo: '' };
+                html += '<div class="jornada-match">' +
+                    '<span class="jm-team"><img src="' + loc.logo + '" class="jm-logo"> ' + loc.corto + '</span>' +
+                    '<span class="jm-score">vs</span>' +
+                    '<span class="jm-team">' + vis.corto + ' <img src="' + vis.logo + '" class="jm-logo"></span></div>';
+            });
+            html += '</div>';
+            // Show member predictions summary
+            html += '<div class="jornada-predictions"><p class="jornada-info">Predicciones abiertas — ve al tab Prode para ingresar las tuyas.</p></div>';
+        } else if (matches.length > 0) {
+            // Completed jornada
+            html += '<div class="jornada-matches">';
+            matches.forEach((m, idx) => {
+                const loc = EQUIPOS[m.local] || { corto: m.local, logo: '' };
+                const vis = EQUIPOS[m.visitante] || { corto: m.visitante, logo: '' };
+                html += '<div class="jornada-match">' +
+                    '<span class="jm-team"><img src="' + loc.logo + '" class="jm-logo"> ' + loc.corto + '</span>' +
+                    '<span class="jm-score jm-final">' + m.gl + ' - ' + m.gv + '</span>' +
+                    '<span class="jm-team">' + vis.corto + ' <img src="' + vis.logo + '" class="jm-logo"></span></div>';
+            });
+            html += '</div>';
+            // Points earned by members this jornada
+            const members = currentLiga._members || [];
+            const jPts = members.filter(m => m.jornada_pts && m.jornada_pts[j] !== undefined)
+                .map(m => ({ nombre: m.nombre, pts: m.jornada_pts[j], isMe: currentUser && m.user_id === currentUser.id }))
+                .sort((a, b) => b.pts - a.pts);
+            if (jPts.length > 0 && jPts.some(p => p.pts > 0)) {
+                html += '<div class="jornada-pts-summary"><h5>Puntos esta jornada</h5>';
+                jPts.forEach(p => {
+                    html += '<div class="jpts-row' + (p.isMe ? ' rk-me' : '') + '"><span>' + p.nombre + '</span><span class="jpts-val">' + (p.pts > 0 ? '+' : '') + p.pts + '</span></div>';
+                });
+                html += '</div>';
+            }
+        }
+
+        html += '</div></div>';
+    }
+
+    html += '</div>';
+    container.innerHTML = html;
+
+    // Toggle jornada expand/collapse
+    container.querySelectorAll('.jornada-header').forEach(hdr => {
+        hdr.addEventListener('click', () => {
+            const j = hdr.dataset.jornada;
+            const body = document.getElementById('jornadaBody' + j);
+            if (body) {
+                body.classList.toggle('hidden');
+                hdr.querySelector('.jornada-toggle').textContent = body.classList.contains('hidden') ? '\u25BC' : '\u25B2';
+            }
+        });
+    });
+
+    // Auto-expand active jornada
+    const activeBody = document.getElementById('jornadaBody9');
+    if (activeBody) {
+        activeBody.classList.remove('hidden');
+        const hdr = container.querySelector('[data-jornada="9"] .jornada-toggle');
+        if (hdr) hdr.textContent = '\u25B2';
+    }
+}
+
+function renderLigaMiembros(container) {
+    const members = currentLiga._members || [];
+    if (members.length === 0) {
+        container.innerHTML = '<div class="empty-state-sm">No hay miembros en esta liga.</div>';
+        return;
+    }
+
+    let html = '<div class="liga-miembros-list">';
+    html += '<div class="miembros-count">' + members.length + ' miembro' + (members.length !== 1 ? 's' : '') + '</div>';
+    members.forEach((m, i) => {
+        const isMe = currentUser && m.user_id === currentUser.id;
+        html += '<div class="miembro-row' + (isMe ? ' rk-me' : '') + '">' +
+            '<span class="miembro-pos">' + (i + 1) + '</span>' +
+            '<div class="miembro-info"><span class="miembro-nombre">' + m.nombre + (isMe ? ' <em>(tu)</em>' : '') + '</span></div>' +
+            '<span class="miembro-pts">' + m.puntos + ' pts</span></div>';
+    });
+
+    // Share code section
+    html += '<div class="liga-share"><p>Comparte el codigo para invitar amigos:</p>' +
+        '<div class="liga-share-code"><span>' + currentLiga.codigo + '</span>' +
+        '<button class="btn btn-outline btn-sm" onclick="navigator.clipboard.writeText(\'' + currentLiga.codigo + '\');showToast(\'Codigo copiado\')">Copiar</button></div></div>';
+    html += '</div>';
+    container.innerHTML = html;
 }
 
 function generarCodigo() {

@@ -286,7 +286,105 @@ body {
 .liga-card:hover { border-color: var(--gold); }
 .liga-card h4 { font-size: 15px; }
 .liga-card p { font-size: 12px; color: var(--text-muted); }
-.liga-card-members { font-size: 18px; color: var(--text-muted); }
+.liga-card-arrow { font-size: 18px; color: var(--text-muted); }
+.liga-detail { animation: fadeIn 0.2s ease; }
+.liga-meta { display: flex; gap: 8px; margin-bottom: 12px; }
+.liga-codigo-badge {
+    background: var(--gold-bg); color: var(--gold); border: 1px solid var(--gold-border);
+    border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 600; letter-spacing: 1px;
+}
+.liga-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.liga-tab-btn {
+    background: none; border: none; color: var(--text-muted); font-size: 14px;
+    padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; font-weight: 500;
+    transition: all 0.2s; font-family: inherit;
+}
+.liga-tab-btn:hover { color: var(--text-primary); }
+.liga-tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* Liga Ranking */
+.liga-ranking { background: var(--bg-card); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+.ranking-header-row {
+    display: grid; grid-template-columns: 40px 1fr 60px;
+    padding: 10px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); font-weight: 600; background: var(--bg-input); border-bottom: 1px solid var(--border);
+}
+.ranking-row {
+    display: grid; grid-template-columns: 40px 1fr 60px;
+    padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 14px;
+    transition: background 0.15s;
+}
+.ranking-row:last-child { border-bottom: none; }
+.ranking-row:hover { background: var(--bg-input); }
+.rk-pos { font-weight: 700; text-align: center; }
+.rk-name { }
+.rk-name em { font-weight: 400; color: var(--gold); font-style: normal; font-size: 12px; }
+.rk-pts { font-weight: 700; text-align: right; color: var(--gold); }
+.rk-gold .rk-pos { color: #FFD700; }
+.rk-silver .rk-pos { color: #C0C0C0; }
+.rk-bronze .rk-pos { color: #CD7F32; }
+.rk-me { background: var(--gold-bg) !important; }
+
+/* Liga Jornadas */
+.liga-jornadas { display: flex; flex-direction: column; gap: 8px; }
+.jornada-block {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm);
+}
+.jornada-active { border-color: var(--gold-border); }
+.jornada-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 16px; cursor: pointer; user-select: none;
+    transition: background 0.15s;
+}
+.jornada-header:hover { background: var(--bg-input); }
+.jornada-header h4 { margin: 0; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.jornada-live {
+    background: #EF4444; color: #fff; font-size: 10px; font-weight: 700;
+    padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+.jornada-toggle { font-size: 12px; color: var(--text-muted); transition: transform 0.2s; }
+.jornada-body { padding: 0 16px 16px; }
+.jornada-matches { display: flex; flex-direction: column; gap: 4px; }
+.jornada-match {
+    display: grid; grid-template-columns: 1fr auto 1fr;
+    align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+.jornada-match:last-child { border-bottom: none; }
+.jm-team { display: flex; align-items: center; gap: 6px; }
+.jm-team:last-child { justify-content: flex-end; }
+.jm-logo { width: 20px; height: 20px; object-fit: contain; }
+.jm-score { font-weight: 700; text-align: center; padding: 0 12px; color: var(--text-muted); min-width: 50px; }
+.jm-final { color: var(--text-primary); }
+.jornada-pts-summary { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.jornada-pts-summary h5 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 0 0 8px; }
+.jpts-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+.jpts-val { font-weight: 700; color: var(--gold); }
+.jornada-info { font-size: 13px; color: var(--text-muted); font-style: italic; padding: 8px 0; }
+
+/* Liga Miembros */
+.liga-miembros-list { }
+.miembros-count { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; font-weight: 600; }
+.miembro-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 6px; box-shadow: var(--shadow-sm);
+}
+.miembro-pos { font-weight: 700; color: var(--text-muted); min-width: 24px; text-align: center; }
+.miembro-info { flex: 1; }
+.miembro-nombre { font-weight: 500; font-size: 14px; }
+.miembro-nombre em { font-weight: 400; color: var(--gold); font-style: normal; font-size: 12px; }
+.miembro-pts { font-weight: 700; color: var(--gold); font-size: 14px; }
+.liga-share { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+.liga-share p { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+.liga-share-code {
+    display: flex; align-items: center; gap: 12px; background: var(--bg-input);
+    border: 1px dashed var(--gold-border); border-radius: var(--radius-sm); padding: 10px 16px;
+}
+.liga-share-code span { font-size: 18px; font-weight: 700; letter-spacing: 3px; color: var(--gold); font-family: monospace; }
 
 /* ===== ESTADIO / HINCHAS ===== */
 .estadio-stats-grid {

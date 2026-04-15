@@ -165,15 +165,97 @@ const RESULTADOS_PASADOS = [
 ];
 
 const JORNADA_PRODE = [
-    { jornada: 9, local: 'LDN', visitante: 'IDV' },
-    { jornada: 9, local: 'EME', visitante: 'UCA' },
-    { jornada: 9, local: 'TEC', visitante: 'BSC' },
-    { jornada: 9, local: 'LDU', visitante: 'MUS' },
-    { jornada: 9, local: 'CUE', visitante: 'DLF' },
-    { jornada: 9, local: 'MAC', visitante: 'AUC' },
-    { jornada: 9, local: 'MAN', visitante: 'OVA' },
-    { jornada: 9, local: 'LIB', visitante: 'GCY' }
+    { jornada: 9, local: 'LDN', visitante: 'AUC', fecha: '2026-04-17' },
+    { jornada: 9, local: 'EME', visitante: 'GCY', fecha: '2026-04-17' },
+    { jornada: 9, local: 'MUS', visitante: 'TEC', fecha: '2026-04-18' },
+    { jornada: 9, local: 'UCA', visitante: 'LIB', fecha: '2026-04-18' },
+    { jornada: 9, local: 'OVA', visitante: 'DLF', fecha: '2026-04-18' },
+    { jornada: 9, local: 'MAN', visitante: 'CUE', fecha: '2026-04-19' },
+    { jornada: 9, local: 'IDV', visitante: 'LDU', fecha: '2026-04-19' },
+    { jornada: 9, local: 'MAC', visitante: 'BSC', fecha: '2026-04-19' }
 ];
+
+// ===== CALENDARIO COMPLETO LIGAPRO 2026 =====
+const CALENDARIO_FECHAS = [
+    // Fecha 9 (17-19 Abril)
+    { fecha: 9, inicio: '2026-04-17', partidos: [
+        { local: 'LDN', visitante: 'AUC', dia: '2026-04-17' },
+        { local: 'EME', visitante: 'GCY', dia: '2026-04-17' },
+        { local: 'MUS', visitante: 'TEC', dia: '2026-04-18' },
+        { local: 'UCA', visitante: 'LIB', dia: '2026-04-18' },
+        { local: 'OVA', visitante: 'DLF', dia: '2026-04-18' },
+        { local: 'MAN', visitante: 'CUE', dia: '2026-04-19' },
+        { local: 'IDV', visitante: 'LDU', dia: '2026-04-19' },
+        { local: 'MAC', visitante: 'BSC', dia: '2026-04-19' }
+    ]},
+    // Fecha 10 (21-23 Abril)
+    { fecha: 10, inicio: '2026-04-21', partidos: [
+        { local: 'LIB', visitante: 'GCY', dia: '2026-04-21' },
+        { local: 'TEC', visitante: 'EME', dia: '2026-04-21' },
+        { local: 'LDN', visitante: 'MAN', dia: '2026-04-22' },
+        { local: 'DLF', visitante: 'IDV', dia: '2026-04-22' },
+        { local: 'CUE', visitante: 'OVA', dia: '2026-04-22' },
+        { local: 'BSC', visitante: 'MUS', dia: '2026-04-22' },
+        { local: 'LDU', visitante: 'AUC', dia: '2026-04-22' },
+        { local: 'UCA', visitante: 'MAC', dia: '2026-04-23' }
+    ]},
+    // Fecha 11 (25-27 Abril)
+    { fecha: 11, inicio: '2026-04-25', partidos: [
+        { local: 'MUS', visitante: 'CUE', dia: '2026-04-25' },
+        { local: 'IDV', visitante: 'LDN', dia: '2026-04-25' },
+        { local: 'EME', visitante: 'LDU', dia: '2026-04-25' },
+        { local: 'MAC', visitante: 'LIB', dia: '2026-04-26' },
+        { local: 'GCY', visitante: 'TEC', dia: '2026-04-26' },
+        { local: 'OVA', visitante: 'BSC', dia: '2026-04-26' },
+        { local: 'MAN', visitante: 'UCA', dia: '2026-04-27' },
+        { local: 'AUC', visitante: 'DLF', dia: '2026-04-27' }
+    ]},
+    // Fecha 12 (1-3 Mayo)
+    { fecha: 12, inicio: '2026-05-01', partidos: [
+        { local: 'UCA', visitante: 'IDV', dia: '2026-05-01' },
+        { local: 'LIB', visitante: 'AUC', dia: '2026-05-01' },
+        { local: 'CUE', visitante: 'TEC', dia: '2026-05-02' },
+        { local: 'LDU', visitante: 'GCY', dia: '2026-05-02' },
+        { local: 'BSC', visitante: 'MAN', dia: '2026-05-02' },
+        { local: 'MAC', visitante: 'OVA', dia: '2026-05-03' },
+        { local: 'DLF', visitante: 'MUS', dia: '2026-05-03' },
+        { local: 'LDN', visitante: 'EME', dia: '2026-05-03' }
+    ]},
+    // Fecha 13 (8-10 Mayo)
+    { fecha: 13, inicio: '2026-05-08', partidos: [
+        { local: 'OVA', visitante: 'LDN', dia: '2026-05-08' },
+        { local: 'IDV', visitante: 'BSC', dia: '2026-05-09' },
+        { local: 'TEC', visitante: 'DLF', dia: '2026-05-09' },
+        { local: 'EME', visitante: 'MAC', dia: '2026-05-09' },
+        { local: 'GCY', visitante: 'CUE', dia: '2026-05-10' },
+        { local: 'AUC', visitante: 'UCA', dia: '2026-05-10' },
+        { local: 'MUS', visitante: 'LIB', dia: '2026-05-10' },
+        { local: 'MAN', visitante: 'LDU', dia: '2026-05-10' }
+    ]},
+    // Fecha 14 (15-17 Mayo)
+    { fecha: 14, inicio: '2026-05-15', partidos: [
+        { local: 'BSC', visitante: 'AUC', dia: '2026-05-15' },
+        { local: 'LDU', visitante: 'TEC', dia: '2026-05-16' },
+        { local: 'UCA', visitante: 'MUS', dia: '2026-05-16' },
+        { local: 'LIB', visitante: 'EME', dia: '2026-05-16' },
+        { local: 'CUE', visitante: 'LDN', dia: '2026-05-17' },
+        { local: 'DLF', visitante: 'OVA', dia: '2026-05-17' },
+        { local: 'MAC', visitante: 'GCY', dia: '2026-05-17' },
+        { local: 'IDV', visitante: 'MAN', dia: '2026-05-17' }
+    ]},
+    // Fecha 15 (22-24 Mayo)
+    { fecha: 15, inicio: '2026-05-22', partidos: [
+        { local: 'TEC', visitante: 'CUE', dia: '2026-05-22' },
+        { local: 'GCY', visitante: 'DLF', dia: '2026-05-23' },
+        { local: 'LDN', visitante: 'BSC', dia: '2026-05-23' },
+        { local: 'MAN', visitante: 'LIB', dia: '2026-05-23' },
+        { local: 'OVA', visitante: 'UCA', dia: '2026-05-24' },
+        { local: 'AUC', visitante: 'IDV', dia: '2026-05-24' },
+        { local: 'MUS', visitante: 'LDU', dia: '2026-05-24' },
+        { local: 'EME', visitante: 'MAC', dia: '2026-05-24' }
+    ]}
+];
+// Fechas 16-30 = vuelta (se generan invirtiendo local/visitante de fechas 1-15)
 
 // ===== APP STATE =====
 let currentUser = null;
@@ -352,6 +434,7 @@ function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
     document.querySelectorAll('.tab-content').forEach(s => s.classList.toggle('active', s.id === 'tab-' + tabId));
     currentTab = tabId;
+    if (tabId === 'calendario') initCalendario();
 }
 
 // ===== STANDINGS TABLE =====
@@ -506,6 +589,129 @@ async function savePronosticosDB(pronosticos) {
         if (error) throw error;
         showToast('Pronosticos guardados');
     } catch (e) { showToast('Error al guardar'); console.error(e); }
+}
+
+// ===== CALENDARIO =====
+function initCalendario() {
+    renderCalendario();
+}
+
+function renderCalendario() {
+    const container = document.getElementById('calendarioContainer');
+    if (!container) return;
+
+    const pastJornadas = {};
+    RESULTADOS_PASADOS.forEach(r => {
+        if (!pastJornadas[r.jornada]) pastJornadas[r.jornada] = [];
+        pastJornadas[r.jornada].push(r);
+    });
+
+    let html = '';
+
+    for (let j = 1; j <= 8; j++) {
+        const matches = pastJornadas[j] || [];
+        const firstDate = matches[0] ? matches[0].fecha : '';
+        html += '<div class="calendario-jornada">';
+        html += '<div class="calendario-header" data-jornada="' + j + '">';
+        html += '<span class="calendario-fecha-num">Fecha ' + j + '</span>';
+        html += '<span class="calendario-fecha-date">' + formatCalDate(firstDate) + '</span>';
+        html += '<span class="calendario-status completada">Completada</span>';
+        html += '<span class="calendario-toggle">&#9660;</span>';
+        html += '</div>';
+        html += '<div class="calendario-body" id="calBody' + j + '" style="display:none">';
+        matches.forEach(m => {
+            const eqL = EQUIPOS[m.local] || { nombre: m.local, logo: '' };
+            const eqV = EQUIPOS[m.visitante] || { nombre: m.visitante, logo: '' };
+            html += '<div class="calendario-match resultado">';
+            html += '<div class="cal-team cal-home">';
+            html += '<img src="' + eqL.logo + '" alt="" class="cal-logo">';
+            html += '<span>' + eqL.nombre + '</span></div>';
+            html += '<div class="cal-score">' + m.gl + ' - ' + m.gv + '</div>';
+            html += '<div class="cal-team cal-away">';
+            html += '<span>' + eqV.nombre + '</span>';
+            html += '<img src="' + eqV.logo + '" alt="" class="cal-logo"></div>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+    }
+
+    CALENDARIO_FECHAS.forEach(cf => {
+        const isActive = cf.fecha === 9;
+        html += '<div class="calendario-jornada">';
+        html += '<div class="calendario-header' + (isActive ? ' activa' : '') + '" data-jornada="' + cf.fecha + '">';
+        html += '<span class="calendario-fecha-num">Fecha ' + cf.fecha + '</span>';
+        html += '<span class="calendario-fecha-date">' + formatCalDate(cf.inicio) + '</span>';
+        html += '<span class="calendario-status ' + (isActive ? 'activa' : 'proxima') + '">' + (isActive ? 'Proxima' : 'Programada') + '</span>';
+        html += '<span class="calendario-toggle">&#9660;</span>';
+        html += '</div>';
+        html += '<div class="calendario-body" id="calBody' + cf.fecha + '" style="display:' + (isActive ? 'block' : 'none') + '">';
+        cf.partidos.forEach(m => {
+            const eqL = EQUIPOS[m.local] || { nombre: m.local, logo: '' };
+            const eqV = EQUIPOS[m.visitante] || { nombre: m.visitante, logo: '' };
+            html += '<div class="calendario-match proxima">';
+            html += '<div class="cal-team cal-home">';
+            html += '<img src="' + eqL.logo + '" alt="" class="cal-logo">';
+            html += '<span>' + eqL.nombre + '</span></div>';
+            html += '<div class="cal-score cal-vs">vs</div>';
+            html += '<div class="cal-team cal-away">';
+            html += '<span>' + eqV.nombre + '</span>';
+            html += '<img src="' + eqV.logo + '" alt="" class="cal-logo"></div>';
+            html += '<div class="cal-date">' + formatCalDate(m.dia) + '</div>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+    });
+
+    for (let j = 16; j <= 30; j++) {
+        const srcJ = j - 15;
+        const srcMatches = srcJ <= 8 ? (pastJornadas[srcJ] || []) :
+            (CALENDARIO_FECHAS.find(c => c.fecha === srcJ)?.partidos || []);
+        html += '<div class="calendario-jornada">';
+        html += '<div class="calendario-header" data-jornada="' + j + '">';
+        html += '<span class="calendario-fecha-num">Fecha ' + j + '</span>';
+        html += '<span class="calendario-fecha-date">Por definir</span>';
+        html += '<span class="calendario-status proxima">Vuelta</span>';
+        html += '<span class="calendario-toggle">&#9660;</span>';
+        html += '</div>';
+        html += '<div class="calendario-body" id="calBody' + j + '" style="display:none">';
+        srcMatches.forEach(m => {
+            const localKey = m.visitante || m.local;
+            const visitKey = m.local || m.visitante;
+            const eqL = EQUIPOS[localKey] || { nombre: localKey, logo: '' };
+            const eqV = EQUIPOS[visitKey] || { nombre: visitKey, logo: '' };
+            html += '<div class="calendario-match proxima">';
+            html += '<div class="cal-team cal-home">';
+            html += '<img src="' + eqL.logo + '" alt="" class="cal-logo">';
+            html += '<span>' + eqL.nombre + '</span></div>';
+            html += '<div class="cal-score cal-vs">vs</div>';
+            html += '<div class="cal-team cal-away">';
+            html += '<span>' + eqV.nombre + '</span>';
+            html += '<img src="' + eqV.logo + '" alt="" class="cal-logo"></div>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+    }
+
+    container.innerHTML = html;
+
+    container.querySelectorAll('.calendario-header').forEach(hdr => {
+        hdr.addEventListener('click', () => {
+            const j = hdr.dataset.jornada;
+            const body = document.getElementById('calBody' + j);
+            if (body) {
+                body.style.display = body.style.display === 'none' ? 'block' : 'none';
+                hdr.querySelector('.calendario-toggle').textContent = body.style.display === 'none' ? '\u25BC' : '\u25B2';
+            }
+        });
+    });
+}
+
+function formatCalDate(dateStr) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr + 'T12:00:00');
+    const months = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    const days = ['Dom','Lun','Mar','Mie','Jue','Vie','Sab'];
+    return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
 }
 
 // ===== AUTH SYSTEM =====

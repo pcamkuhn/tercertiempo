@@ -643,7 +643,57 @@ body {
     border-top: 1px solid var(--border); margin-top: 40px;
 }
 
+/* ===== CALENDARIO ===== */
+.calendario-subtitle {
+    color: #888; font-size: 0.95rem; margin-bottom: 1.5rem;
+}
+.calendario-jornada {
+    background: #fff; border-radius: 12px; margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06); overflow: hidden;
+}
+.calendario-header {
+    display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
+    cursor: pointer; transition: background 0.2s;
+}
+.calendario-header:hover { background: #fafafa; }
+.calendario-header.activa { background: linear-gradient(135deg, #fdf6e3, #fff8e1); border-left: 4px solid #D4A843; }
+.calendario-fecha-num { font-weight: 700; font-size: 1rem; min-width: 70px; }
+.calendario-fecha-date { color: #888; font-size: 0.85rem; flex: 1; }
+.calendario-status {
+    font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; font-weight: 600;
+}
+.calendario-status.completada { background: #e8f5e9; color: #2e7d32; }
+.calendario-status.activa { background: #fff3e0; color: #e65100; }
+.calendario-status.proxima { background: #e3f2fd; color: #1565c0; }
+.calendario-toggle { font-size: 0.7rem; color: #aaa; }
+.calendario-body { padding: 0 1rem 1rem; }
+.calendario-match {
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+    padding: 0.6rem 0.5rem; border-bottom: 1px solid #f0f0f0; gap: 0.5rem;
+    position: relative;
+}
+.calendario-match:last-child { border-bottom: none; }
+.calendario-match.resultado .cal-score { font-weight: 800; color: #333; }
+.cal-team { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.cal-team.cal-home { justify-content: flex-end; text-align: right; }
+.cal-team.cal-away { justify-content: flex-start; text-align: left; }
+.cal-logo { width: 24px; height: 24px; object-fit: contain; }
+.cal-score { text-align: center; font-size: 1rem; font-weight: 700; min-width: 50px; }
+.cal-vs { color: #aaa; font-weight: 400; font-size: 0.85rem; }
+.cal-date {
+    position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+    font-size: 0.7rem; color: #aaa; padding-right: 0.5rem;
+}
+
 /* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .calendario-header { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 1rem; }
+    .calendario-fecha-num { min-width: auto; }
+    .cal-team { font-size: 0.8rem; }
+    .cal-logo { width: 20px; height: 20px; }
+    .cal-date { display: none; }
+}
+
 @media (max-width: 768px) {
     .section-header h2 { font-size: 18px; }
     .estadio-stats-grid { grid-template-columns: repeat(2, 1fr); }

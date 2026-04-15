@@ -429,9 +429,24 @@
 
             <!-- Perfiles de Hinchas -->
             <div class="sub-content" id="subtab-hinchas-perfiles">
-                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">Explora los perfiles de otros hinchas y sus estadisticas de asistencia al estadio.</p>
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">Explora los perfiles de otros hinchas, su historial de asistencias y deja comentarios.</p>
                 <div class="hincha-grid" id="hinchaGrid">
                     <div class="empty-state-sm">Cargando perfiles...</div>
+                </div>
+                <!-- Detail panel that shows when clicking a profile -->
+                <div class="hincha-detail-panel hidden" id="hinchaDetailPanel">
+                    <div class="hincha-detail-header">
+                        <button class="btn btn-outline btn-sm" id="btnCerrarDetalle">← Volver</button>
+                        <div class="hincha-detail-info">
+                            <h3 id="detalleNombre">-</h3>
+                            <p id="detalleEquipo">-</p>
+                        </div>
+                        <div class="hincha-detail-stats" id="detalleStats"></div>
+                    </div>
+                    <h4 style="margin: 1rem 0 0.5rem">Historial de Asistencias</h4>
+                    <div class="hincha-detail-history" id="detalleHistory">
+                        <div class="empty-state-sm">Cargando historial...</div>
+                    </div>
                 </div>
             </div>
         </section>

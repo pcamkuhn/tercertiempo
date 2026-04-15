@@ -1964,6 +1964,7 @@ async function loadHinchaProfiles() {
                 }
                 profiles.sort((a, b) => b.total - a.total);
                 grid.innerHTML = profiles.map(renderHinchaCard).join('');
+                initHinchaCardClicks();
                 return;
             }
         } catch (e) { console.warn('Hincha profiles load error:', e); }
@@ -1975,7 +1976,7 @@ function renderHinchaCard(p) {
     const eq = EQUIPOS[p.equipo];
     const eqName = eq ? eq.nombre : (p.equipo || 'Sin equipo');
     const initials = (p.nombre || '?').substring(0, 2).toUpperCase();
-    return '<div class="hincha-card">' +
+    return '<div class="hincha-card" data-uid="' + p.id + '" style="cursor:pointer">' +
         '<div class="hincha-avatar">' + initials + '</div>' +
         '<div class="hincha-name">' + (p.nombre || 'Anonimo') + '</div>' +
         '<div class="hincha-team">' + eqName + '</div>' +
@@ -1985,6 +1986,203 @@ function renderHinchaCard(p) {
         '<div class="hincha-stat"><span class="hincha-stat-num d">' + p.d + '</span><span class="hincha-stat-label">E</span></div>' +
         '<div class="hincha-stat"><span class="hincha-stat-num l">' + p.l + '</span><span class="hincha-stat-label">D</span></div>' +
         '</div></div>';
+}
+
+// Click handler for hincha cards - show their detail
+function initHinchaCardClicks() {
+    document.getElementById('hinchaGrid')?.addEventListener('click', async (e) => {
+        const card = e.target.closest('.hincha-card');
+        if (!card) return;
+        const uid = card.dataset.uid;
+        if (!uid) return;
+        showHinchaDetail(uid);
+    });
+    document.getElementById('btnCerrarDetalle')?.addEventListener('click', () => {
+        document.getElementById('hinchaDetailPanel')?.classList.add('hidden');
+        document.getElementById('hinchaGrid')?.classList.remove('hidden');
+    });
+}
+
+async function showHinchaDetail(uid) {
+    const grid = document.getElementById('hinchaGrid');
+    const panel = document.getElementById('hinchaDetailPanel');
+    if (!grid || !panel || !supabaseClient) return;
+
+    grid.classList.add('hidden');
+    panel.classList.remove('hidden');
+
+    // Load profile info
+    try {
+        const { data: perfil } = await supabaseClient.from('perfiles')
+            .select('nombre, equipo').eq('id', uid).single();
+        if (perfil) {
+            document.getElementById('detalleNombre').textContent = perfil.nombre || 'Anonimo';
+            const eq = EQUIPOS[perfil.equipo];
+            document.getElementById('detalleEquipo').textContent = eq ? eq.nombre : (perfil.equipo || '');
+        }
+    } catch(e) { /* ignore */ }
+
+    // Load attendance history
+    const historyDiv = document.getElementById('detalleHistory');
+    historyDiv.innerHTML = '<div class="empty-state-sm">Cargando...</div>';
+
+    try {
+        const { data: asistencias } = await supabaseClient.from('asistencias_estadio')
+            .select('*')
+            .eq('user_id', uid)
+            .order('fecha', { ascending: false });
+
+        if (!asistencias || asistencias.length === 0) {
+            historyDiv.innerHTML = '<div class="empty-state-sm">Este hincha aun no ha registrado asistencias.</div>';
+            // Update stats
+            document.getElementById('detalleStats').innerHTML = '<span class="badge">0 partidos</span>';
+            return;
+        }
+
+        const w = asistencias.filter(a => a.resultado === 'W').length;
+        const d = asistencias.filter(a => a.resultado === 'D').length;
+        const l = asistencias.filter(a => a.resultado === 'L').length;
+        document.getElementById('detalleStats').innerHTML =
+            '<span class="badge">' + asistencias.length + ' partidos</span> ' +
+            '<span class="badge badge-win">' + w + 'V</span> ' +
+            '<span class="badge badge-draw">' + d + 'E</span> ' +
+            '<span class="badge badge-loss">' + l + 'D</span>';
+
+        // Load comments count for each asistencia
+        const asistIds = asistencias.map(a => a.id);
+        let commentCounts = {};
+        try {
+            const { data: comments } = await supabaseClient.from('comentarios_asistencia')
+                .select('asistencia_id')
+                .in('asistencia_id', asistIds);
+            if (comments) {
+                comments.forEach(c => {
+                    commentCounts[c.asistencia_id] = (commentCounts[c.asistencia_id] || 0) + 1;
+                });
+            }
+        } catch(e) { /* ignore */ }
+
+        historyDiv.innerHTML = asistencias.map(a => {
+            const eqL = EQUIPOS[a.equipo_local] || { nombre: a.equipo_local, logo: '' };
+            const eqV = EQUIPOS[a.equipo_visitante] || { nombre: a.equipo_visitante, logo: '' };
+            const resClass = a.resultado === 'W' ? 'win' : a.resultado === 'D' ? 'draw' : 'loss';
+            const resLabel = a.resultado === 'W' ? 'Victoria' : a.resultado === 'D' ? 'Empate' : 'Derrota';
+            const numComments = commentCounts[a.id] || 0;
+            const gl = a.goles_local != null ? a.goles_local : '-';
+            const gv = a.goles_visitante != null ? a.goles_visitante : '-';
+            return '<div class="asistencia-card" data-asist-id="' + a.id + '">' +
+                '<div class="asistencia-header">' +
+                '<span class="asistencia-res ' + resClass + '">' + resLabel + '</span>' +
+                '<span class="asistencia-fecha">' + (a.fecha || '') + ' · J' + (a.jornada || '-') + '</span>' +
+                '</div>' +
+                '<div class="asistencia-match">' +
+                '<img src="' + eqL.logo + '" class="asistencia-logo">' +
+                '<span>' + eqL.nombre + '</span>' +
+                '<span class="asistencia-score">' + gl + ' - ' + gv + '</span>' +
+                '<span>' + eqV.nombre + '</span>' +
+                '<img src="' + eqV.logo + '" class="asistencia-logo">' +
+                '</div>' +
+                (a.nota ? '<p class="asistencia-nota">"' + a.nota + '"</p>' : '') +
+                '<div class="asistencia-comments-toggle" data-asist-id="' + a.id + '">' +
+                '💬 ' + numComments + ' comentario' + (numComments !== 1 ? 's' : '') +
+                '</div>' +
+                '<div class="asistencia-comments hidden" id="comments-' + a.id + '"></div>' +
+                '</div>';
+        }).join('');
+
+        // Add click handlers for comment toggles
+        historyDiv.querySelectorAll('.asistencia-comments-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const aid = toggle.dataset.asistId;
+                const commentsDiv = document.getElementById('comments-' + aid);
+                if (!commentsDiv) return;
+                if (commentsDiv.classList.contains('hidden')) {
+                    commentsDiv.classList.remove('hidden');
+                    loadAsistenciaComments(aid, commentsDiv);
+                } else {
+                    commentsDiv.classList.add('hidden');
+                }
+            });
+        });
+
+    } catch (e) {
+        console.warn('Error loading hincha detail:', e);
+        historyDiv.innerHTML = '<div class="empty-state-sm">Error al cargar historial.</div>';
+    }
+}
+
+async function loadAsistenciaComments(asistenciaId, container) {
+    container.innerHTML = '<div class="empty-state-sm" style="padding:8px">Cargando comentarios...</div>';
+    try {
+        const { data: comments } = await supabaseClient.from('comentarios_asistencia')
+            .select('id, user_id, comentario, created_at')
+            .eq('asistencia_id', asistenciaId)
+            .order('created_at', { ascending: true });
+
+        let html = '';
+        if (comments && comments.length > 0) {
+            // Get user names
+            const userIds = [...new Set(comments.map(c => c.user_id))];
+            let userNames = {};
+            try {
+                const { data: perfiles } = await supabaseClient.from('perfiles')
+                    .select('id, nombre').in('id', userIds);
+                if (perfiles) perfiles.forEach(p => { userNames[p.id] = p.nombre; });
+            } catch(e) { /* ignore */ }
+
+            html = comments.map(c => {
+                const name = userNames[c.user_id] || 'Hincha';
+                const isMe = currentUser && c.user_id === currentUser.id;
+                return '<div class="comment-item' + (isMe ? ' comment-me' : '') + '">' +
+                    '<div class="comment-header">' +
+                    '<span class="comment-author">' + name + '</span>' +
+                    '<span class="comment-time">' + timeAgo(c.created_at) + '</span>' +
+                    '</div>' +
+                    '<p class="comment-text">' + c.comentario + '</p>' +
+                    '</div>';
+            }).join('');
+        }
+
+        // Add comment input if user is logged in
+        if (currentUser) {
+            html += '<div class="comment-new">' +
+                '<input type="text" class="input-field comment-input" placeholder="Escribe un comentario..." maxlength="500" data-asist-id="' + asistenciaId + '">' +
+                '<button class="btn btn-primary btn-sm comment-send" data-asist-id="' + asistenciaId + '">Enviar</button>' +
+                '</div>';
+        }
+
+        container.innerHTML = html || '<div class="empty-state-sm" style="padding:8px">Sin comentarios. Se el primero!</div>' +
+            (currentUser ? '<div class="comment-new"><input type="text" class="input-field comment-input" placeholder="Escribe un comentario..." maxlength="500" data-asist-id="' + asistenciaId + '"><button class="btn btn-primary btn-sm comment-send" data-asist-id="' + asistenciaId + '">Enviar</button></div>' : '');
+
+        // Add send button handlers
+        container.querySelectorAll('.comment-send').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const aid = btn.dataset.asistId;
+                const input = container.querySelector('.comment-input[data-asist-id="' + aid + '"]');
+                if (!input || !input.value.trim()) return;
+                try {
+                    const { error } = await supabaseClient.from('comentarios_asistencia')
+                        .insert({ asistencia_id: aid, user_id: currentUser.id, comentario: input.value.trim() });
+                    if (error) throw error;
+                    loadAsistenciaComments(aid, container);
+                } catch(e) { showToast('Error al comentar'); console.error(e); }
+            });
+        });
+
+        // Also handle Enter key
+        container.querySelectorAll('.comment-input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const btn = container.querySelector('.comment-send[data-asist-id="' + input.dataset.asistId + '"]');
+                    if (btn) btn.click();
+                }
+            });
+        });
+
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state-sm" style="padding:8px">Error al cargar comentarios.</div>';
+        console.error(e);
+    }
 }
 
 // ===== UTILITIES =====

@@ -2096,14 +2096,46 @@ async function showHinchaDetail(uid) {
             return;
         }
 
+        const total = asistencias.length;
         const w = asistencias.filter(a => a.resultado === 'W').length;
         const d = asistencias.filter(a => a.resultado === 'D').length;
         const l = asistencias.filter(a => a.resultado === 'L').length;
         document.getElementById('detalleStats').innerHTML =
-            '<span class="badge">' + asistencias.length + ' partidos</span> ' +
+            '<span class="badge">' + total + ' partidos</span> ' +
             '<span class="badge badge-win">' + w + 'V</span> ' +
             '<span class="badge badge-draw">' + d + 'E</span> ' +
             '<span class="badge badge-loss">' + l + 'D</span>';
+
+        // Show luck indicator
+        const luckCard = document.getElementById('detalleLuckCard');
+        if (luckCard && total > 0) {
+            luckCard.classList.remove('hidden');
+            const lossPct = Math.round(l / total * 100);
+            const luckScore = Math.min(100, Math.max(5, lossPct + Math.floor(d / total * 30)));
+            const fill = document.getElementById('detalleLuckFill');
+            if (fill) fill.style.width = luckScore + '%';
+
+            let texto = '';
+            if (luckScore < 20) texto = 'Excelente: su equipo tiene un rendimiento sobresaliente cuando asiste.';
+            else if (luckScore < 40) texto = 'Bueno: resultados positivos en la mayoria de sus asistencias.';
+            else if (luckScore < 60) texto = 'Regular: resultados mixtos. Su presencia no inclina la balanza.';
+            else if (luckScore < 80) texto = 'Desfavorable: su equipo tiende a obtener malos resultados cuando asiste.';
+            else texto = 'Critico: la correlacion entre su asistencia y las derrotas es notable.';
+            const luckLabel = document.getElementById('detalleLuckLabel');
+            if (luckLabel) luckLabel.textContent = luckScore + '% - ' + texto;
+
+            const verdicts = [
+                'Los datos indican que su equipo rinde de forma excepcional cuando asiste al estadio. Su presencia parece ser un factor positivo.',
+                'Los resultados cuando asiste son variados, con una ligera tendencia positiva. No hay una correlacion clara entre su presencia y el rendimiento.',
+                'Se observa una tendencia negativa en los resultados cuando asiste. Esto podria ser coincidencia, pero los numeros son desfavorables.',
+                'Existe una correlacion significativa entre su asistencia y los resultados adversos. Estadisticamente, los datos sugieren considerar alternativas.'
+            ];
+            const vIdx = luckScore < 25 ? 0 : luckScore < 50 ? 1 : luckScore < 75 ? 2 : 3;
+            const verdictText = document.getElementById('detalleVerdictText');
+            if (verdictText) verdictText.textContent = verdicts[vIdx];
+        } else if (luckCard) {
+            luckCard.classList.add('hidden');
+        }
 
         // Load comments count for each asistencia
         const asistIds = asistencias.map(a => a.id);

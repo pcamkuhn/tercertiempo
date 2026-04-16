@@ -1297,6 +1297,31 @@ async function unirseLiga() {
     } else { showToast('Codigo no encontrado'); }
 }
 
+async function eliminarLiga(liga) {
+    if (!currentUser || currentUser.id !== ADMIN_USER_ID) { showToast('No tienes permisos.'); return; }
+    if (!confirm('¿Seguro que quieres eliminar la liga "' + liga.nombre + '"? Esta accion no se puede deshacer.')) return;
+
+    if (supabaseClient && !String(liga.id).startsWith('local_')) {
+        try {
+            // Delete members first (FK), then the league
+            await supabaseClient.from('liga_miembros').delete().eq('liga_id', liga.id);
+            const { error } = await supabaseClient.from('ligas').delete().eq('id', liga.id);
+            if (error) throw error;
+        } catch (e) { showToast('Error al eliminar: ' + e.message); console.error(e); return; }
+    }
+
+    // Remove from local
+    localLigas = localLigas.filter(l => l.id !== liga.id);
+    currentLiga = null;
+
+    // Return to list
+    document.getElementById('ligaDetail')?.classList.add('hidden');
+    document.getElementById('ligasList')?.classList.remove('hidden');
+    document.getElementById('ligasList')?.parentElement.querySelector('.ligas-actions')?.classList.remove('hidden');
+    showToast('Liga "' + liga.nombre + '" eliminada.');
+    loadLigas();
+}
+
 async function loadLigas() {
     if (!currentUser) return;
     const container = document.getElementById('ligasList');
@@ -1351,7 +1376,11 @@ async function openLigaDetail(liga) {
 
     const header = document.getElementById('ligaHeader');
     if (header) {
-        header.innerHTML = '<h2>' + liga.nombre + '</h2>' +
+        const adminDeleteBtn = (currentUser && currentUser.id === ADMIN_USER_ID)
+            ? '<button class="btn btn-sm" id="btnEliminarLiga" style="background:#e74c3c; color:#fff; border:none; border-radius:6px; padding:4px 12px; font-size:0.75rem; cursor:pointer; margin-left:8px;">🗑 Eliminar Liga</button>'
+            : '';
+        header.innerHTML = '<div style="display:flex; align-items:center; justify-content:space-between;">' +
+            '<h2>' + liga.nombre + '</h2>' + adminDeleteBtn + '</div>' +
             '<div class="liga-meta"><span class="liga-codigo-badge">Codigo: ' + liga.codigo + '</span></div>' +
             '<div class="liga-tabs">' +
             '<button class="liga-tab-btn active" data-ltab="ranking">Ranking</button>' +
@@ -1366,6 +1395,8 @@ async function openLigaDetail(liga) {
                 renderLigaTab();
             });
         });
+        // Admin delete handler
+        document.getElementById('btnEliminarLiga')?.addEventListener('click', () => eliminarLiga(liga));
     }
 
     await loadLigaMembers(liga);

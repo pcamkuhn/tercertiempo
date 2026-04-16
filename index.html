@@ -229,11 +229,12 @@
                     <h2>Mi Registro de Estadio</h2>
                 </div>
 
-                <!-- Sub-tabs: Mi Estadio / Historial -->
+                <!-- Sub-tabs: Mi Estadio / Historial / Idas al Estadio -->
                 <div class="sub-tabs">
                     <button class="sub-tab active" data-subtab="resumen">Resumen</button>
-                    <button class="sub-tab" data-subtab="historial">Historial Completo</button>
+                    <button class="sub-tab" data-subtab="historial">Historial</button>
                     <button class="sub-tab" data-subtab="registrar">Registrar</button>
+                    <button class="sub-tab" data-subtab="idas-estadio">Idas al Estadio</button>
                 </div>
 
                 <!-- Sub: Resumen -->
@@ -368,6 +369,39 @@
                         <button class="btn btn-outline btn-sm" id="btnCerrarManual" style="margin-top:10px">Cerrar</button>
                     </div>
                 </div>
+
+                <!-- Sub: Idas al Estadio (all hinchas profiles) -->
+                <div class="sub-content" id="subtab-idas-estadio">
+                    <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">Mira cuantas veces han ido otros hinchas al estadio y su indicador de suerte.</p>
+                    <div class="hincha-grid" id="hinchaGridEstadio">
+                        <div class="empty-state-sm">Cargando perfiles...</div>
+                    </div>
+                    <!-- Detail panel -->
+                    <div class="hincha-detail-panel hidden" id="hinchaDetailPanelEstadio">
+                        <div class="hincha-detail-header">
+                            <button class="btn btn-outline btn-sm" id="btnCerrarDetalleEstadio">← Volver</button>
+                            <div class="hincha-detail-info">
+                                <h3 id="detalleNombreEstadio">-</h3>
+                                <p id="detalleEquipoEstadio">-</p>
+                            </div>
+                            <div class="hincha-detail-stats" id="detalleStatsEstadio"></div>
+                        </div>
+                        <div class="luck-card hidden" id="detalleLuckCardEstadio">
+                            <h4>Indicador de Suerte</h4>
+                            <div class="luck-meter">
+                                <div class="luck-bar"><div class="luck-fill" id="detalleLuckFillEstadio" style="width: 0%"></div></div>
+                                <span class="luck-label" id="detalleLuckLabelEstadio"></span>
+                            </div>
+                            <div class="verdict-box" id="detalleVerdictBoxEstadio">
+                                <p class="verdict-text" id="detalleVerdictTextEstadio"></p>
+                            </div>
+                        </div>
+                        <h4 style="margin: 1rem 0 0.5rem">Historial de Asistencias</h4>
+                        <div class="hincha-detail-history" id="detalleHistoryEstadio">
+                            <div class="empty-state-sm">Cargando historial...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -381,7 +415,7 @@
                 <button class="sub-tab active" data-subtab="foro-general">General</button>
                 <button class="sub-tab" data-subtab="foro-equipo">Por Equipo</button>
                 <button class="sub-tab" data-subtab="foro-jornada">Por Jornada</button>
-                <button class="sub-tab" data-subtab="hinchas-perfiles">Hinchas</button>
+                <button class="sub-tab" data-subtab="hinchas-perfiles">La Tribuna</button>
             </div>
 
             <!-- Foro General -->
@@ -427,9 +461,9 @@
                 </div>
             </div>
 
-            <!-- Perfiles de Hinchas -->
+            <!-- La Tribuna del Hincha -->
             <div class="sub-content" id="subtab-hinchas-perfiles">
-                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">Explora los perfiles de otros hinchas, su historial de asistencias y deja comentarios.</p>
+                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">La Tribuna del Hincha: comenta y conecta con otros hinchas de la LigaPro.</p>
                 <div class="hincha-grid" id="hinchaGrid">
                     <div class="empty-state-sm">Cargando perfiles...</div>
                 </div>

@@ -1132,6 +1132,7 @@ function onLogin(user) {
     // Load hinchas data
     loadAsistencias();
     updateRivalSelect();
+    loadHinchaProfilesEstadio();
 }
 
 function onLogout() {
@@ -2001,32 +2002,173 @@ function getTimeAgo(dateStr) {
 }
 
 // ===== HINCHA PROFILES (Public) =====
+async function loadHinchaProfilesData() {
+    if (!supabaseClient) return [];
+    try {
+        const { data } = await supabaseClient.from('perfiles').select('id, nombre, equipo').limit(50);
+        if (!data || data.length === 0) return [];
+        const profiles = [];
+        for (const p of data) {
+            const { data: asist } = await supabaseClient.from('asistencias_estadio')
+                .select('resultado').eq('user_id', p.id);
+            const total = asist ? asist.length : 0;
+            const w = asist ? asist.filter(a => a.resultado === 'W').length : 0;
+            const d = asist ? asist.filter(a => a.resultado === 'D').length : 0;
+            const l = asist ? asist.filter(a => a.resultado === 'L').length : 0;
+            profiles.push({ ...p, total, w, d, l });
+        }
+        profiles.sort((a, b) => b.total - a.total);
+        return profiles;
+    } catch (e) { console.warn('Load profiles error:', e); return []; }
+}
+
+// Load into Estadio > Idas al Estadio
+async function loadHinchaProfilesEstadio() {
+    const grid = document.getElementById('hinchaGridEstadio');
+    if (!grid) return;
+    const profiles = await loadHinchaProfilesData();
+    if (profiles.length > 0) {
+        grid.innerHTML = profiles.map(renderHinchaCard).join('');
+        // Click handlers
+        grid.addEventListener('click', async (e) => {
+            const card = e.target.closest('.hincha-card');
+            if (!card) return;
+            showHinchaDetailEstadio(card.dataset.uid);
+        });
+    } else {
+        grid.innerHTML = '<div class="empty-state-sm">No hay perfiles disponibles aun.</div>';
+    }
+    // Close button
+    document.getElementById('btnCerrarDetalleEstadio')?.addEventListener('click', () => {
+        document.getElementById('hinchaDetailPanelEstadio')?.classList.add('hidden');
+        document.getElementById('hinchaGridEstadio')?.classList.remove('hidden');
+    });
+}
+
+async function showHinchaDetailEstadio(uid) {
+    const grid = document.getElementById('hinchaGridEstadio');
+    const panel = document.getElementById('hinchaDetailPanelEstadio');
+    if (!grid || !panel || !supabaseClient) return;
+    grid.classList.add('hidden');
+    panel.classList.remove('hidden');
+
+    // Load profile
+    try {
+        const { data: perfil } = await supabaseClient.from('perfiles').select('nombre, equipo').eq('id', uid).single();
+        if (perfil) {
+            document.getElementById('detalleNombreEstadio').textContent = perfil.nombre || 'Anonimo';
+            const eq = EQUIPOS[perfil.equipo];
+            document.getElementById('detalleEquipoEstadio').textContent = eq ? eq.nombre : (perfil.equipo || '');
+        }
+    } catch(e) {}
+
+    const historyDiv = document.getElementById('detalleHistoryEstadio');
+    historyDiv.innerHTML = '<div class="empty-state-sm">Cargando...</div>';
+
+    try {
+        const { data: asistencias } = await supabaseClient.from('asistencias_estadio')
+            .select('*').eq('user_id', uid).order('fecha', { ascending: false });
+
+        if (!asistencias || asistencias.length === 0) {
+            historyDiv.innerHTML = '<div class="empty-state-sm">Este hincha aun no ha registrado asistencias.</div>';
+            document.getElementById('detalleStatsEstadio').innerHTML = '<span class="badge">0 partidos</span>';
+            document.getElementById('detalleLuckCardEstadio')?.classList.add('hidden');
+            return;
+        }
+
+        const total = asistencias.length;
+        const w = asistencias.filter(a => a.resultado === 'W').length;
+        const d = asistencias.filter(a => a.resultado === 'D').length;
+        const l = asistencias.filter(a => a.resultado === 'L').length;
+        document.getElementById('detalleStatsEstadio').innerHTML =
+            '<span class="badge">' + total + ' partidos</span> ' +
+            '<span class="badge badge-win">' + w + 'V</span> ' +
+            '<span class="badge badge-draw">' + d + 'E</span> ' +
+            '<span class="badge badge-loss">' + l + 'D</span>';
+
+        // Luck indicator
+        const luckCard = document.getElementById('detalleLuckCardEstadio');
+        if (luckCard && total > 0) {
+            luckCard.classList.remove('hidden');
+            const lossPct = Math.round(l / total * 100);
+            const luckScore = Math.min(100, Math.max(5, lossPct + Math.floor(d / total * 30)));
+            const fill = document.getElementById('detalleLuckFillEstadio');
+            if (fill) fill.style.width = luckScore + '%';
+            let texto = '';
+            if (luckScore < 20) texto = 'Excelente: su equipo rinde de forma sobresaliente cuando asiste.';
+            else if (luckScore < 40) texto = 'Bueno: resultados positivos en la mayoria de sus asistencias.';
+            else if (luckScore < 60) texto = 'Regular: resultados mixtos. Su presencia no inclina la balanza.';
+            else if (luckScore < 80) texto = 'Desfavorable: su equipo tiende a obtener malos resultados cuando asiste.';
+            else texto = 'Critico: la correlacion entre su asistencia y las derrotas es notable.';
+            document.getElementById('detalleLuckLabelEstadio').textContent = luckScore + '% - ' + texto;
+            const verdicts = [
+                'Los datos indican que su equipo rinde de forma excepcional cuando asiste al estadio.',
+                'Los resultados cuando asiste son variados, con una ligera tendencia positiva.',
+                'Se observa una tendencia negativa en los resultados cuando asiste.',
+                'Existe una correlacion significativa entre su asistencia y los resultados adversos.'
+            ];
+            document.getElementById('detalleVerdictTextEstadio').textContent = verdicts[luckScore < 25 ? 0 : luckScore < 50 ? 1 : luckScore < 75 ? 2 : 3];
+        } else if (luckCard) { luckCard.classList.add('hidden'); }
+
+        // Comment counts
+        const asistIds = asistencias.map(a => a.id);
+        let commentCounts = {};
+        try {
+            const { data: comments } = await supabaseClient.from('comentarios_asistencia')
+                .select('asistencia_id').in('asistencia_id', asistIds);
+            if (comments) comments.forEach(c => { commentCounts[c.asistencia_id] = (commentCounts[c.asistencia_id] || 0) + 1; });
+        } catch(e) {}
+
+        historyDiv.innerHTML = asistencias.map(a => {
+            const eqL = EQUIPOS[a.equipo_local] || { nombre: a.equipo_local, logo: '' };
+            const eqV = EQUIPOS[a.equipo_visitante] || { nombre: a.equipo_visitante, logo: '' };
+            const resClass = a.resultado === 'W' ? 'win' : a.resultado === 'D' ? 'draw' : 'loss';
+            const resLabel = a.resultado === 'W' ? 'Victoria' : a.resultado === 'D' ? 'Empate' : 'Derrota';
+            const numComments = commentCounts[a.id] || 0;
+            const gl = a.goles_local != null ? a.goles_local : '-';
+            const gv = a.goles_visitante != null ? a.goles_visitante : '-';
+            return '<div class="asistencia-card" data-asist-id="' + a.id + '">' +
+                '<div class="asistencia-header">' +
+                '<span class="asistencia-res ' + resClass + '">' + resLabel + '</span>' +
+                '<span class="asistencia-fecha">' + (a.fecha || '') + ' · J' + (a.jornada || '-') + '</span></div>' +
+                '<div class="asistencia-match">' +
+                '<img src="' + eqL.logo + '" class="asistencia-logo"><span>' + eqL.nombre + '</span>' +
+                '<span class="asistencia-score">' + gl + ' - ' + gv + '</span>' +
+                '<span>' + eqV.nombre + '</span><img src="' + eqV.logo + '" class="asistencia-logo"></div>' +
+                (a.nota ? '<p class="asistencia-nota">"' + a.nota + '"</p>' : '') +
+                '<div class="asistencia-comments-toggle" data-asist-id="' + a.id + '">💬 ' + numComments + ' comentario' + (numComments !== 1 ? 's' : '') + '</div>' +
+                '<div class="asistencia-comments hidden" id="comments-estadio-' + a.id + '"></div></div>';
+        }).join('');
+
+        // Comment toggle handlers
+        historyDiv.querySelectorAll('.asistencia-comments-toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const aid = toggle.dataset.asistId;
+                const commentsDiv = document.getElementById('comments-estadio-' + aid);
+                if (!commentsDiv) return;
+                if (commentsDiv.classList.contains('hidden')) {
+                    commentsDiv.classList.remove('hidden');
+                    loadAsistenciaComments(aid, commentsDiv);
+                } else { commentsDiv.classList.add('hidden'); }
+            });
+        });
+    } catch (e) {
+        console.warn('Error loading hincha detail estadio:', e);
+        historyDiv.innerHTML = '<div class="empty-state-sm">Error al cargar historial.</div>';
+    }
+}
+
+// Load into Comunidad > La Tribuna
 async function loadHinchaProfiles() {
     const grid = document.getElementById('hinchaGrid');
     if (!grid) return;
-    if (supabaseClient) {
-        try {
-            const { data } = await supabaseClient.from('perfiles').select('id, nombre, equipo').limit(50);
-            if (data && data.length > 0) {
-                // For each profile, load their attendance stats
-                const profiles = [];
-                for (const p of data) {
-                    const { data: asist } = await supabaseClient.from('asistencias_estadio')
-                        .select('resultado').eq('user_id', p.id);
-                    const total = asist ? asist.length : 0;
-                    const w = asist ? asist.filter(a => a.resultado === 'W').length : 0;
-                    const d = asist ? asist.filter(a => a.resultado === 'D').length : 0;
-                    const l = asist ? asist.filter(a => a.resultado === 'L').length : 0;
-                    profiles.push({ ...p, total, w, d, l });
-                }
-                profiles.sort((a, b) => b.total - a.total);
-                grid.innerHTML = profiles.map(renderHinchaCard).join('');
-                initHinchaCardClicks();
-                return;
-            }
-        } catch (e) { console.warn('Hincha profiles load error:', e); }
+    const profiles = await loadHinchaProfilesData();
+    if (profiles.length > 0) {
+        grid.innerHTML = profiles.map(renderHinchaCard).join('');
+        initHinchaCardClicks();
+    } else {
+        grid.innerHTML = '<div class="empty-state-sm">No hay perfiles disponibles aun.</div>';
     }
-    grid.innerHTML = '<div class="empty-state-sm">No hay perfiles disponibles aun.</div>';
 }
 
 function renderHinchaCard(p) {

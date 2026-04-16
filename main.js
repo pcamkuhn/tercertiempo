@@ -2429,6 +2429,7 @@ async function loadEditoriales() {
                 .order('created_at', { ascending: false }).limit(30);
             if (data && data.length > 0) {
                 list.innerHTML = data.map(renderEditorial).join('');
+                initEditorialCommentListeners();
                 return;
             }
         } catch (e) { console.warn('Editorial load error:', e); }
@@ -2436,11 +2437,52 @@ async function loadEditoriales() {
     list.innerHTML = '<div class="empty-state-sm">No hay editoriales publicados aun.</div>';
 }
 
+function initEditorialCommentListeners() {
+    // Toggle comments visibility
+    document.querySelectorAll('.btn-toggle-comments').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const editorialId = btn.dataset.editorialId;
+            const container = document.querySelector('.editorial-comments-container[data-editorial-id="' + CSS.escape(editorialId) + '"]');
+            if (!container) return;
+            const isHidden = container.classList.contains('hidden');
+            container.classList.toggle('hidden');
+            if (isHidden) {
+                btn.textContent = '💬 Ocultar comentarios';
+                await loadEditorialComments(editorialId);
+            } else {
+                btn.textContent = '💬 Ver comentarios';
+            }
+        });
+    });
+    // Send comment buttons
+    document.querySelectorAll('.btn-editorial-comment').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const editorialId = btn.dataset.editorialId;
+            const input = btn.parentElement.querySelector('.editorial-comment-text');
+            if (!input || !input.value.trim()) { showToast('Escribe un comentario.'); return; }
+            btn.disabled = true;
+            await postEditorialComment(editorialId, input.value);
+            input.value = '';
+            btn.disabled = false;
+        });
+    });
+    // Enter key to send
+    document.querySelectorAll('.editorial-comment-text').forEach(input => {
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const btn = input.parentElement.querySelector('.btn-editorial-comment');
+                if (btn) btn.click();
+            }
+        });
+    });
+}
+
 function renderEditorial(e) {
     const eq = EQUIPOS[e.equipo];
     const eqTag = eq ? '<span class="editorial-equipo-tag" style="background:' + eq.color1 + '; color:' + eq.color2 + '">' + eq.corto + '</span>' : '';
     const fecha = new Date(e.created_at);
     const fechaStr = fecha.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
+    const editorialId = e.created_at; // unique ID for linking comments
 
     // Parse foto from texto
     let contenido = e.texto || '';
@@ -2460,6 +2502,13 @@ function renderEditorial(e) {
     }
     const contenidoHtml = escapeHtml(contenido).replace(/\n/g, '<br>');
 
+    const commentInputHtml = currentUser ?
+        '<div class="editorial-comment-input" style="display:flex; gap:8px; margin-top:8px;">' +
+            '<input type="text" class="input-field editorial-comment-text" placeholder="Escribe un comentario..." maxlength="300" style="flex:1; font-size:0.85rem;">' +
+            '<button class="btn btn-primary btn-sm btn-editorial-comment" data-editorial-id="' + escapeHtml(editorialId) + '">Enviar</button>' +
+        '</div>' :
+        '<p style="font-size:0.8rem; color:var(--text-secondary); margin-top:8px;">Inicia sesion para comentar.</p>';
+
     return '<article class="editorial-card">' +
         '<div class="editorial-header">' +
         '<h3 class="editorial-titulo">' + escapeHtml(e.filtro) + '</h3>' +
@@ -2471,7 +2520,61 @@ function renderEditorial(e) {
         '</div>' +
         fotoHtml +
         '<div class="editorial-body">' + contenidoHtml + '</div>' +
+        '<div class="editorial-comments-section" style="margin-top:12px; border-top:1px solid var(--border-color); padding-top:12px;">' +
+            '<button class="btn-toggle-comments" data-editorial-id="' + escapeHtml(editorialId) + '" style="background:none; border:none; color:var(--accent); cursor:pointer; font-size:0.85rem; font-weight:600; padding:0;">💬 Ver comentarios</button>' +
+            '<div class="editorial-comments-container hidden" data-editorial-id="' + escapeHtml(editorialId) + '">' +
+                '<div class="editorial-comments-list" data-editorial-id="' + escapeHtml(editorialId) + '" style="margin-top:8px;"></div>' +
+                commentInputHtml +
+            '</div>' +
+        '</div>' +
         '</article>';
+}
+
+// Editorial comments
+async function loadEditorialComments(editorialId) {
+    const listDiv = document.querySelector('.editorial-comments-list[data-editorial-id="' + CSS.escape(editorialId) + '"]');
+    if (!listDiv || !supabaseClient) return;
+    listDiv.innerHTML = '<span style="font-size:0.8rem; color:var(--text-secondary);">Cargando...</span>';
+    try {
+        const { data } = await supabaseClient.from('foro_comentarios')
+            .select('*').eq('tipo', 'editorial_comment').eq('filtro', editorialId)
+            .order('created_at', { ascending: true }).limit(50);
+        if (!data || data.length === 0) {
+            listDiv.innerHTML = '<span style="font-size:0.8rem; color:var(--text-secondary);">Sin comentarios aun. Se el primero.</span>';
+            return;
+        }
+        listDiv.innerHTML = data.map(c => {
+            const eq = EQUIPOS[c.equipo];
+            const colorDot = eq ? '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + eq.color1 + ';margin-right:4px;"></span>' : '';
+            return '<div class="editorial-comment" style="padding:6px 0; border-bottom:1px solid rgba(0,0,0,0.05);">' +
+                '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                    '<span style="font-size:0.8rem; font-weight:600;">' + colorDot + escapeHtml(c.nombre || 'Anonimo') + '</span>' +
+                    '<span style="font-size:0.7rem; color:var(--text-secondary);">' + getTimeAgo(c.created_at) + '</span>' +
+                '</div>' +
+                '<p style="font-size:0.85rem; margin:2px 0 0 0;">' + escapeHtml(c.texto) + '</p>' +
+            '</div>';
+        }).join('');
+    } catch (e) {
+        listDiv.innerHTML = '<span style="font-size:0.8rem; color:red;">Error al cargar comentarios.</span>';
+        console.warn('Editorial comments error:', e);
+    }
+}
+
+async function postEditorialComment(editorialId, texto) {
+    if (!currentUser || !supabaseClient || !texto.trim()) return;
+    try {
+        const { error } = await supabaseClient.from('foro_comentarios').insert({
+            user_id: currentUser.id,
+            nombre: currentUser.nombre,
+            equipo: currentUser.equipo || 'NEUTRAL',
+            tipo: 'editorial_comment',
+            filtro: editorialId,
+            texto: texto.trim(),
+            created_at: new Date().toISOString()
+        });
+        if (error) throw error;
+        await loadEditorialComments(editorialId);
+    } catch (e) { showToast('Error al comentar: ' + e.message); console.error(e); }
 }
 
 // ===== UTILITIES =====

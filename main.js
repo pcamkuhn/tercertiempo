@@ -2127,7 +2127,7 @@ async function loadHinchaProfilesData() {
     } catch (e) { console.warn('Load profiles error:', e); return []; }
 }
 
-// Load into Estadio > Idas al Estadio
+// Load into Estadio > Registro de los Hinchas
 async function loadHinchaProfilesEstadio() {
     const grid = document.getElementById('hinchaGridEstadio');
     if (!grid) return;

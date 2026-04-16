@@ -2357,6 +2357,8 @@ async function loadAsistenciaComments(asistenciaId, container) {
 // ===== EDITORIAL =====
 const ADMIN_USER_ID = '68c8b022-d4c1-4b88-aec1-d334eb4980f7'; // Pablo - editor
 
+let editorialUploadedImage = null; // stores base64 data URL
+
 function initEditorial() {
     // Show editor only for admin
     const editor = document.getElementById('editorialEditor');
@@ -2372,10 +2374,67 @@ function initEditorial() {
             tagSelect.appendChild(opt);
         });
     }
+    // File upload handler
+    const fileInput = document.getElementById('editorialFotoFile');
+    const preview = document.getElementById('editorialFotoPreview');
+    const fileName = document.getElementById('editorialFotoFileName');
+    const btnQuitar = document.getElementById('btnQuitarFoto');
+
+    fileInput?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) { showToast('Solo se permiten imagenes.'); return; }
+        if (file.size > 5 * 1024 * 1024) { showToast('Imagen muy grande. Max 5MB.'); return; }
+        fileName.textContent = file.name;
+        btnQuitar.style.display = 'inline-block';
+        // Resize and convert to base64
+        try {
+            editorialUploadedImage = await resizeImageToBase64(file, 900, 0.8);
+            preview.src = editorialUploadedImage;
+            preview.style.display = 'block';
+            // Clear URL field since we're using uploaded file
+            document.getElementById('editorialFotoUrl').value = '';
+        } catch (err) {
+            showToast('Error al procesar imagen.');
+            console.error(err);
+        }
+    });
+
+    btnQuitar?.addEventListener('click', () => {
+        editorialUploadedImage = null;
+        fileInput.value = '';
+        preview.style.display = 'none';
+        preview.src = '';
+        fileName.textContent = 'Sin imagen';
+        btnQuitar.style.display = 'none';
+    });
+
     // Publish button
     document.getElementById('btnPublicarEditorial')?.addEventListener('click', publicarEditorial);
     // Load editoriales
     loadEditoriales();
+}
+
+function resizeImageToBase64(file, maxWidth, quality) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let w = img.width, h = img.height;
+                if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
 }
 
 async function publicarEditorial() {
@@ -2388,10 +2447,13 @@ async function publicarEditorial() {
     if (!titulo) { showToast('Escribe un titulo para el editorial.'); return; }
     if (!contenido) { showToast('Escribe el contenido del editorial.'); return; }
 
+    // Use uploaded image (base64) or URL
+    const fotoFinal = editorialUploadedImage || fotoUrl;
+
     // Encode foto info in texto as JSON prefix if present
     let textoFinal = contenido;
-    if (fotoUrl) {
-        textoFinal = JSON.stringify({ foto: fotoUrl, credito: fotoCredito }) + '\n---EDITORIAL---\n' + contenido;
+    if (fotoFinal) {
+        textoFinal = JSON.stringify({ foto: fotoFinal, credito: fotoCredito }) + '\n---EDITORIAL---\n' + contenido;
     }
 
     const editorial = {
@@ -2416,6 +2478,16 @@ async function publicarEditorial() {
     document.getElementById('editorialEquipoTag').value = '';
     document.getElementById('editorialFotoUrl').value = '';
     document.getElementById('editorialFotoCredito').value = '';
+    // Reset uploaded image
+    editorialUploadedImage = null;
+    const fileInput = document.getElementById('editorialFotoFile');
+    if (fileInput) fileInput.value = '';
+    const preview = document.getElementById('editorialFotoPreview');
+    if (preview) { preview.style.display = 'none'; preview.src = ''; }
+    const fName = document.getElementById('editorialFotoFileName');
+    if (fName) fName.textContent = 'Sin imagen';
+    const btnQ = document.getElementById('btnQuitarFoto');
+    if (btnQ) btnQ.style.display = 'none';
     showToast('Editorial publicado.');
     loadEditoriales();
 }

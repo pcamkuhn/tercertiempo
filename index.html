@@ -56,7 +56,7 @@
             </button>
             <button class="tab-btn" data-tab="comunidad">
                 <span class="tab-icon">💬</span>
-                <span class="tab-label">Comunidad</span>
+                <span class="tab-label">La Tribuna</span>
             </button>
             <button class="tab-btn" data-tab="editorial">
                 <span class="tab-icon">📝</span>
@@ -409,17 +409,16 @@
             </div>
         </section>
 
-        <!-- TAB 6: COMUNIDAD (Foro + Perfiles) -->
+        <!-- TAB 6: LA TRIBUNA (Foro) -->
         <section class="tab-content" id="tab-comunidad">
             <div class="section-header">
-                <h2>Comunidad</h2>
+                <h2>La Tribuna</h2>
             </div>
 
             <div class="sub-tabs">
                 <button class="sub-tab active" data-subtab="foro-general">General</button>
                 <button class="sub-tab" data-subtab="foro-equipo">Por Equipo</button>
                 <button class="sub-tab" data-subtab="foro-jornada">Por Jornada</button>
-                <button class="sub-tab" data-subtab="hinchas-perfiles">La Tribuna</button>
             </div>
 
             <!-- Foro General -->
@@ -465,40 +464,6 @@
                 </div>
             </div>
 
-            <!-- La Tribuna del Hincha -->
-            <div class="sub-content" id="subtab-hinchas-perfiles">
-                <p style="font-size:13px; color:var(--text-secondary); margin-bottom:12px">La Tribuna del Hincha: comenta y conecta con otros hinchas de la LigaPro.</p>
-                <div class="hincha-grid" id="hinchaGrid">
-                    <div class="empty-state-sm">Cargando perfiles...</div>
-                </div>
-                <!-- Detail panel that shows when clicking a profile -->
-                <div class="hincha-detail-panel hidden" id="hinchaDetailPanel">
-                    <div class="hincha-detail-header">
-                        <button class="btn btn-outline btn-sm" id="btnCerrarDetalle">← Volver</button>
-                        <div class="hincha-detail-info">
-                            <h3 id="detalleNombre">-</h3>
-                            <p id="detalleEquipo">-</p>
-                        </div>
-                        <div class="hincha-detail-stats" id="detalleStats"></div>
-                    </div>
-                    <!-- Luck indicator for this hincha -->
-                    <div class="luck-card hidden" id="detalleLuckCard">
-                        <h4>Indicador de Suerte</h4>
-                        <div class="luck-meter">
-                            <div class="luck-bar"><div class="luck-fill" id="detalleLuckFill" style="width: 0%"></div></div>
-                            <span class="luck-label" id="detalleLuckLabel"></span>
-                        </div>
-                        <div class="verdict-box" id="detalleVerdictBox">
-                            <p class="verdict-text" id="detalleVerdictText"></p>
-                        </div>
-                    </div>
-
-                    <h4 style="margin: 1rem 0 0.5rem">Historial de Asistencias</h4>
-                    <div class="hincha-detail-history" id="detalleHistory">
-                        <div class="empty-state-sm">Cargando historial...</div>
-                    </div>
-                </div>
-            </div>
         </section>
 
         <!-- TAB: EDITORIAL -->
@@ -512,6 +477,8 @@
                 <div class="editorial-form">
                     <input type="text" class="input-field" id="editorialTitulo" placeholder="Titulo del editorial..." maxlength="120" style="font-size:16px; font-weight:600; margin-bottom:8px">
                     <textarea class="input-field" id="editorialContenido" placeholder="Escribe tu editorial aqui..." rows="8" style="min-height:150px; font-size:14px; line-height:1.6"></textarea>
+                    <input type="url" class="input-field" id="editorialFotoUrl" placeholder="URL de la imagen (opcional)" style="margin-top:8px">
+                    <input type="text" class="input-field" id="editorialFotoCredito" placeholder="Fuente / credito de la foto (opcional)" maxlength="120" style="margin-top:4px; font-size:0.85rem">
                     <div style="display:flex; gap:8px; margin-top:8px">
                         <select class="input-field" id="editorialEquipoTag" style="max-width:200px">
                             <option value="">Tema general</option>
@@ -546,6 +513,25 @@
                             <p id="perfilEquipo">-</p>
                         </div>
                     </div>
+
+                    <!-- Editar perfil -->
+                    <div class="perfil-card">
+                        <h4>Editar Perfil</h4>
+                        <div class="perfil-edit-form">
+                            <div class="form-group" style="margin-bottom:8px">
+                                <label style="font-size:0.8rem; color:var(--text-secondary)">Nombre de usuario</label>
+                                <input type="text" class="input-field" id="editPerfilNombre" placeholder="Tu nombre o apodo" maxlength="40">
+                            </div>
+                            <div class="form-group" style="margin-bottom:8px">
+                                <label style="font-size:0.8rem; color:var(--text-secondary)">Equipo</label>
+                                <select class="input-field" id="editPerfilEquipo">
+                                    <option value="">Selecciona equipo</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary btn-sm" id="btnGuardarPerfil">Guardar Cambios</button>
+                        </div>
+                    </div>
+
                     <div class="perfil-card">
                         <h4>Resumen de Actividad</h4>
                         <div class="perfil-stats-row">

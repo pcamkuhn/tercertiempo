@@ -1134,6 +1134,7 @@ function onLogin(user) {
     loadAsistencias();
     updateRivalSelect();
     loadHinchaProfilesEstadio();
+    fillPerfilForm();
 
     // Editorial: show editor if admin
     const editorPanel = document.getElementById('editorialEditor');
@@ -1835,7 +1836,52 @@ function renderAttendanceHistory() {
 
 // ===== PERFIL =====
 function initPerfil() {
-    // Perfil is updated via onLogin
+    // Populate equipo select
+    const eqSelect = document.getElementById('editPerfilEquipo');
+    if (eqSelect) {
+        Object.entries(EQUIPOS).forEach(([id, eq]) => {
+            const opt = document.createElement('option');
+            opt.value = id; opt.textContent = eq.nombre;
+            eqSelect.appendChild(opt);
+        });
+        // Add "Otro" option
+        const otroOpt = document.createElement('option');
+        otroOpt.value = '_neutral'; otroOpt.textContent = 'Neutral / Otro';
+        eqSelect.appendChild(otroOpt);
+    }
+
+    document.getElementById('btnGuardarPerfil')?.addEventListener('click', async () => {
+        if (!currentUser || !supabaseClient) return;
+        const nuevoNombre = document.getElementById('editPerfilNombre')?.value.trim();
+        const nuevoEquipo = document.getElementById('editPerfilEquipo')?.value;
+        if (!nuevoNombre) { showToast('Escribe un nombre.'); return; }
+
+        try {
+            const updates = { nombre: nuevoNombre };
+            if (nuevoEquipo) updates.equipo = nuevoEquipo === '_neutral' ? 'NEUTRAL' : nuevoEquipo;
+            const { error } = await supabaseClient.from('perfiles')
+                .update(updates).eq('id', currentUser.id);
+            if (error) throw error;
+            currentUser.nombre = nuevoNombre;
+            if (nuevoEquipo) currentUser.equipo = updates.equipo;
+            // Update UI
+            document.getElementById('perfilNombre').textContent = nuevoNombre;
+            const eq = EQUIPOS[currentUser.equipo];
+            document.getElementById('perfilEquipo').textContent = eq ? eq.nombre : (currentUser.equipo || '');
+            document.getElementById('userName').textContent = nuevoNombre;
+            showToast('Perfil actualizado.');
+        } catch (e) { showToast('Error al guardar: ' + e.message); console.error(e); }
+    });
+
+    document.getElementById('btnPerfilLogin')?.addEventListener('click', () => openAuthModal('login'));
+}
+
+function fillPerfilForm() {
+    if (!currentUser) return;
+    const nameInput = document.getElementById('editPerfilNombre');
+    const eqSelect = document.getElementById('editPerfilEquipo');
+    if (nameInput) nameInput.value = currentUser.nombre || '';
+    if (eqSelect) eqSelect.value = currentUser.equipo || '';
 }
 
 // ===== SUB-TABS (Estadio & Comunidad) =====
@@ -1889,7 +1935,6 @@ function initComunidad() {
     });
     // Load initial data
     loadForoGeneral();
-    loadHinchaProfiles();
 }
 
 async function postComment(tipo, filtro) {
@@ -2167,19 +2212,6 @@ async function showHinchaDetailEstadio(uid) {
     }
 }
 
-// Load into Comunidad > La Tribuna
-async function loadHinchaProfiles() {
-    const grid = document.getElementById('hinchaGrid');
-    if (!grid) return;
-    const profiles = await loadHinchaProfilesData();
-    if (profiles.length > 0) {
-        grid.innerHTML = profiles.map(renderHinchaCard).join('');
-        initHinchaCardClicks();
-    } else {
-        grid.innerHTML = '<div class="empty-state-sm">No hay perfiles disponibles aun.</div>';
-    }
-}
-
 function renderHinchaCard(p) {
     const eq = EQUIPOS[p.equipo];
     const eqName = eq ? eq.nombre : (p.equipo || 'Sin equipo');
@@ -2194,161 +2226,6 @@ function renderHinchaCard(p) {
         '<div class="hincha-stat"><span class="hincha-stat-num d">' + p.d + '</span><span class="hincha-stat-label">E</span></div>' +
         '<div class="hincha-stat"><span class="hincha-stat-num l">' + p.l + '</span><span class="hincha-stat-label">D</span></div>' +
         '</div></div>';
-}
-
-// Click handler for hincha cards - show their detail
-function initHinchaCardClicks() {
-    document.getElementById('hinchaGrid')?.addEventListener('click', async (e) => {
-        const card = e.target.closest('.hincha-card');
-        if (!card) return;
-        const uid = card.dataset.uid;
-        if (!uid) return;
-        showHinchaDetail(uid);
-    });
-    document.getElementById('btnCerrarDetalle')?.addEventListener('click', () => {
-        document.getElementById('hinchaDetailPanel')?.classList.add('hidden');
-        document.getElementById('hinchaGrid')?.classList.remove('hidden');
-    });
-}
-
-async function showHinchaDetail(uid) {
-    const grid = document.getElementById('hinchaGrid');
-    const panel = document.getElementById('hinchaDetailPanel');
-    if (!grid || !panel || !supabaseClient) return;
-
-    grid.classList.add('hidden');
-    panel.classList.remove('hidden');
-
-    // Load profile info
-    try {
-        const { data: perfil } = await supabaseClient.from('perfiles')
-            .select('nombre, equipo').eq('id', uid).single();
-        if (perfil) {
-            document.getElementById('detalleNombre').textContent = perfil.nombre || 'Anonimo';
-            const eq = EQUIPOS[perfil.equipo];
-            document.getElementById('detalleEquipo').textContent = eq ? eq.nombre : (perfil.equipo || '');
-        }
-    } catch(e) { /* ignore */ }
-
-    // Load attendance history
-    const historyDiv = document.getElementById('detalleHistory');
-    historyDiv.innerHTML = '<div class="empty-state-sm">Cargando...</div>';
-
-    try {
-        const { data: asistencias } = await supabaseClient.from('asistencias_estadio')
-            .select('*')
-            .eq('user_id', uid)
-            .order('fecha', { ascending: false });
-
-        if (!asistencias || asistencias.length === 0) {
-            historyDiv.innerHTML = '<div class="empty-state-sm">Este hincha aun no ha registrado asistencias.</div>';
-            // Update stats
-            document.getElementById('detalleStats').innerHTML = '<span class="badge">0 partidos</span>';
-            return;
-        }
-
-        const total = asistencias.length;
-        const w = asistencias.filter(a => a.resultado === 'W').length;
-        const d = asistencias.filter(a => a.resultado === 'D').length;
-        const l = asistencias.filter(a => a.resultado === 'L').length;
-        document.getElementById('detalleStats').innerHTML =
-            '<span class="badge">' + total + ' partidos</span> ' +
-            '<span class="badge badge-win">' + w + 'V</span> ' +
-            '<span class="badge badge-draw">' + d + 'E</span> ' +
-            '<span class="badge badge-loss">' + l + 'D</span>';
-
-        // Show luck indicator
-        const luckCard = document.getElementById('detalleLuckCard');
-        if (luckCard && total > 0) {
-            luckCard.classList.remove('hidden');
-            const lossPct = Math.round(l / total * 100);
-            const luckScore = Math.min(100, Math.max(5, lossPct + Math.floor(d / total * 30)));
-            const fill = document.getElementById('detalleLuckFill');
-            if (fill) fill.style.width = luckScore + '%';
-
-            let texto = '';
-            if (luckScore < 20) texto = 'Excelente: su equipo tiene un rendimiento sobresaliente cuando asiste.';
-            else if (luckScore < 40) texto = 'Bueno: resultados positivos en la mayoria de sus asistencias.';
-            else if (luckScore < 60) texto = 'Regular: resultados mixtos. Su presencia no inclina la balanza.';
-            else if (luckScore < 80) texto = 'Desfavorable: su equipo tiende a obtener malos resultados cuando asiste.';
-            else texto = 'Critico: la correlacion entre su asistencia y las derrotas es notable.';
-            const luckLabel = document.getElementById('detalleLuckLabel');
-            if (luckLabel) luckLabel.textContent = luckScore + '% - ' + texto;
-
-            const verdicts = [
-                'Los datos indican que su equipo rinde de forma excepcional cuando asiste al estadio. Su presencia parece ser un factor positivo.',
-                'Los resultados cuando asiste son variados, con una ligera tendencia positiva. No hay una correlacion clara entre su presencia y el rendimiento.',
-                'Se observa una tendencia negativa en los resultados cuando asiste. Esto podria ser coincidencia, pero los numeros son desfavorables.',
-                'Existe una correlacion significativa entre su asistencia y los resultados adversos. Estadisticamente, los datos sugieren considerar alternativas.'
-            ];
-            const vIdx = luckScore < 25 ? 0 : luckScore < 50 ? 1 : luckScore < 75 ? 2 : 3;
-            const verdictText = document.getElementById('detalleVerdictText');
-            if (verdictText) verdictText.textContent = verdicts[vIdx];
-        } else if (luckCard) {
-            luckCard.classList.add('hidden');
-        }
-
-        // Load comments count for each asistencia
-        const asistIds = asistencias.map(a => a.id);
-        let commentCounts = {};
-        try {
-            const { data: comments } = await supabaseClient.from('comentarios_asistencia')
-                .select('asistencia_id')
-                .in('asistencia_id', asistIds);
-            if (comments) {
-                comments.forEach(c => {
-                    commentCounts[c.asistencia_id] = (commentCounts[c.asistencia_id] || 0) + 1;
-                });
-            }
-        } catch(e) { /* ignore */ }
-
-        historyDiv.innerHTML = asistencias.map(a => {
-            const eqL = EQUIPOS[a.equipo_local] || { nombre: a.equipo_local, logo: '' };
-            const eqV = EQUIPOS[a.equipo_visitante] || { nombre: a.equipo_visitante, logo: '' };
-            const resClass = a.resultado === 'W' ? 'win' : a.resultado === 'D' ? 'draw' : 'loss';
-            const resLabel = a.resultado === 'W' ? 'Victoria' : a.resultado === 'D' ? 'Empate' : 'Derrota';
-            const numComments = commentCounts[a.id] || 0;
-            const gl = a.goles_local != null ? a.goles_local : '-';
-            const gv = a.goles_visitante != null ? a.goles_visitante : '-';
-            return '<div class="asistencia-card" data-asist-id="' + a.id + '">' +
-                '<div class="asistencia-header">' +
-                '<span class="asistencia-res ' + resClass + '">' + resLabel + '</span>' +
-                '<span class="asistencia-fecha">' + (a.fecha || '') + ' · J' + (a.jornada || '-') + '</span>' +
-                '</div>' +
-                '<div class="asistencia-match">' +
-                '<img src="' + eqL.logo + '" class="asistencia-logo">' +
-                '<span>' + eqL.nombre + '</span>' +
-                '<span class="asistencia-score">' + gl + ' - ' + gv + '</span>' +
-                '<span>' + eqV.nombre + '</span>' +
-                '<img src="' + eqV.logo + '" class="asistencia-logo">' +
-                '</div>' +
-                (a.nota ? '<p class="asistencia-nota">"' + a.nota + '"</p>' : '') +
-                '<div class="asistencia-comments-toggle" data-asist-id="' + a.id + '">' +
-                '💬 ' + numComments + ' comentario' + (numComments !== 1 ? 's' : '') +
-                '</div>' +
-                '<div class="asistencia-comments hidden" id="comments-' + a.id + '"></div>' +
-                '</div>';
-        }).join('');
-
-        // Add click handlers for comment toggles
-        historyDiv.querySelectorAll('.asistencia-comments-toggle').forEach(toggle => {
-            toggle.addEventListener('click', () => {
-                const aid = toggle.dataset.asistId;
-                const commentsDiv = document.getElementById('comments-' + aid);
-                if (!commentsDiv) return;
-                if (commentsDiv.classList.contains('hidden')) {
-                    commentsDiv.classList.remove('hidden');
-                    loadAsistenciaComments(aid, commentsDiv);
-                } else {
-                    commentsDiv.classList.add('hidden');
-                }
-            });
-        });
-
-    } catch (e) {
-        console.warn('Error loading hincha detail:', e);
-        historyDiv.innerHTML = '<div class="empty-state-sm">Error al cargar historial.</div>';
-    }
 }
 
 async function loadAsistenciaComments(asistenciaId, container) {
@@ -2454,8 +2331,16 @@ async function publicarEditorial() {
     const titulo = document.getElementById('editorialTitulo')?.value.trim();
     const contenido = document.getElementById('editorialContenido')?.value.trim();
     const equipoTag = document.getElementById('editorialEquipoTag')?.value || '';
+    const fotoUrl = document.getElementById('editorialFotoUrl')?.value.trim() || '';
+    const fotoCredito = document.getElementById('editorialFotoCredito')?.value.trim() || '';
     if (!titulo) { showToast('Escribe un titulo para el editorial.'); return; }
     if (!contenido) { showToast('Escribe el contenido del editorial.'); return; }
+
+    // Encode foto info in texto as JSON prefix if present
+    let textoFinal = contenido;
+    if (fotoUrl) {
+        textoFinal = JSON.stringify({ foto: fotoUrl, credito: fotoCredito }) + '\n---EDITORIAL---\n' + contenido;
+    }
 
     const editorial = {
         user_id: currentUser.id,
@@ -2463,7 +2348,7 @@ async function publicarEditorial() {
         equipo: equipoTag,
         tipo: 'editorial',
         filtro: titulo,
-        texto: contenido,
+        texto: textoFinal,
         created_at: new Date().toISOString()
     };
 
@@ -2477,6 +2362,8 @@ async function publicarEditorial() {
     document.getElementById('editorialTitulo').value = '';
     document.getElementById('editorialContenido').value = '';
     document.getElementById('editorialEquipoTag').value = '';
+    document.getElementById('editorialFotoUrl').value = '';
+    document.getElementById('editorialFotoCredito').value = '';
     showToast('Editorial publicado.');
     loadEditoriales();
 }
@@ -2503,7 +2390,25 @@ function renderEditorial(e) {
     const eqTag = eq ? '<span class="editorial-equipo-tag" style="background:' + eq.color1 + '; color:' + eq.color2 + '">' + eq.corto + '</span>' : '';
     const fecha = new Date(e.created_at);
     const fechaStr = fecha.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
-    const contenidoHtml = escapeHtml(e.texto).replace(/\n/g, '<br>');
+
+    // Parse foto from texto
+    let contenido = e.texto || '';
+    let fotoHtml = '';
+    if (contenido.includes('\n---EDITORIAL---\n')) {
+        const parts = contenido.split('\n---EDITORIAL---\n');
+        try {
+            const meta = JSON.parse(parts[0]);
+            if (meta.foto) {
+                fotoHtml = '<div class="editorial-foto">' +
+                    '<img src="' + escapeHtml(meta.foto) + '" alt="Foto editorial" loading="lazy">' +
+                    (meta.credito ? '<span class="editorial-foto-credito">Fuente: ' + escapeHtml(meta.credito) + '</span>' : '') +
+                    '</div>';
+            }
+        } catch(ex) {}
+        contenido = parts.slice(1).join('\n---EDITORIAL---\n');
+    }
+    const contenidoHtml = escapeHtml(contenido).replace(/\n/g, '<br>');
+
     return '<article class="editorial-card">' +
         '<div class="editorial-header">' +
         '<h3 class="editorial-titulo">' + escapeHtml(e.filtro) + '</h3>' +
@@ -2513,6 +2418,7 @@ function renderEditorial(e) {
         '<span class="editorial-autor">Por ' + (e.nombre || 'Editor') + '</span>' +
         '<span class="editorial-fecha">' + fechaStr + '</span>' +
         '</div>' +
+        fotoHtml +
         '<div class="editorial-body">' + contenidoHtml + '</div>' +
         '</article>';
 }

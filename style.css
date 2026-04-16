@@ -786,4 +786,8 @@ body {
 .editorial-equipo-tag { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 .editorial-meta { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.8rem; }
 .editorial-autor { font-weight: 600; }
+.editorial-foto { margin: 0.8rem 0; border-radius: 8px; overflow: hidden; }
+.editorial-foto img { width: 100%; max-height: 400px; object-fit: cover; display: block; }
+.editorial-foto-credito { display: block; font-size: 0.75rem; color: var(--text-secondary); padding: 4px 8px; background: rgba(0,0,0,0.03); font-style: italic; }
 .editorial-body { font-size: 0.95rem; line-height: 1.7; color: var(--text-primary); }
+.perfil-edit-form { display: flex; flex-direction: column; gap: 4px; }

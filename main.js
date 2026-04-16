@@ -1739,7 +1739,8 @@ async function registrarManual(e) {
     if (!currentUser) return;
     const miEquipo = currentUser.equipo || 'BSC';
     const fecha = document.getElementById('inputFechaPartido').value;
-    const jornada = parseInt(document.getElementById('inputJornadaPartido').value) || null;
+    const jornadaRaw = document.getElementById('inputJornadaPartido').value.trim();
+    const jornada = jornadaRaw ? parseInt(jornadaRaw) : 0;
     const tipoTorneo = document.getElementById('selectTipoTorneo')?.value || 'LigaPro';
     const esLocal = document.getElementById('selectLocalVisitante').value === 'local';
     const rival = document.getElementById('selectRival').value;
@@ -1748,7 +1749,7 @@ async function registrarManual(e) {
     const miGol = parseInt(document.getElementById('inputGolesMi').value);
     const rivalGol = parseInt(document.getElementById('inputGolesRival').value);
 
-    if (!fecha || isNaN(miGol) || isNaN(rivalGol)) { showToast('Completa todos los campos'); return; }
+    if (!fecha || isNaN(miGol) || isNaN(rivalGol)) { showToast('Completa fecha y goles'); return; }
     if (rival === '_manual' && !rivalManual) { showToast('Escribe el nombre del rival'); return; }
 
     const resultado = miGol > rivalGol ? 'W' : miGol < rivalGol ? 'L' : 'D';

@@ -1665,17 +1665,16 @@ async function registrarDeJornada(jornada, fecha, local, visitante, gl, gv) {
     const asistencia = {
         user_id: currentUser.id, fecha, jornada,
         equipo_local: local, equipo_visitante: visitante,
-        gol_local: gl, gol_visitante: gv,
-        mi_equipo: miEquipo, es_local: esLocal,
-        resultado, rival,
-        created_at: new Date().toISOString()
+        goles_local: gl, goles_visitante: gv,
+        resultado
     };
 
     if (supabaseClient) {
         try {
-            const { error } = await supabaseClient.from('asistencias_estadio').insert(asistencia);
-            if (error) throw error;
-        } catch (e) { console.error('Insert error:', e); }
+            const { data: inserted, error } = await supabaseClient.from('asistencias_estadio').insert(asistencia).select();
+            if (error) { showToast('Error al registrar: ' + error.message); console.error('Insert error:', error); return; }
+            if (inserted && inserted[0]) asistencia.id = inserted[0].id;
+        } catch (e) { console.error('Insert error:', e); showToast('Error al registrar asistencia'); return; }
     }
 
     userAsistencias.push(asistencia);
@@ -1711,18 +1710,16 @@ async function registrarManual(e) {
     const asistencia = {
         user_id: currentUser.id, fecha, jornada,
         equipo_local: local, equipo_visitante: visitante,
-        gol_local: gl, gol_visitante: gv,
-        mi_equipo: miEquipo, es_local: esLocal,
-        resultado, rival: rivalFinal,
-        tipo_torneo: tipoTorneo,
-        created_at: new Date().toISOString()
+        goles_local: gl, goles_visitante: gv,
+        resultado
     };
 
     if (supabaseClient) {
         try {
-            const { error } = await supabaseClient.from('asistencias_estadio').insert(asistencia);
-            if (error) throw error;
-        } catch (e) { console.error('Insert error:', e); }
+            const { data: inserted, error } = await supabaseClient.from('asistencias_estadio').insert(asistencia).select();
+            if (error) { showToast('Error al registrar: ' + error.message); console.error('Insert error:', error); return; }
+            if (inserted && inserted[0]) asistencia.id = inserted[0].id;
+        } catch (e) { console.error('Insert error:', e); showToast('Error al registrar asistencia'); return; }
     }
 
     userAsistencias.push(asistencia);
@@ -1812,16 +1809,17 @@ function renderAttendanceHistory() {
         return;
     }
     list.innerHTML = userAsistencias.slice(0, 20).map(a => {
-        const rivalEq = EQUIPOS[a.rival] || { nombre: a.rival };
+        const eqL = EQUIPOS[a.equipo_local] || { nombre: a.equipo_local || '?', logo: '' };
+        const eqV = EQUIPOS[a.equipo_visitante] || { nombre: a.equipo_visitante || '?', logo: '' };
         const resLabel = a.resultado === 'W' ? 'V' : a.resultado === 'D' ? 'E' : 'D';
-        const miGol = a.es_local ? a.gol_local : a.gol_visitante;
-        const rivalGol = a.es_local ? a.gol_visitante : a.gol_local;
+        const gl = a.goles_local != null ? a.goles_local : '-';
+        const gv = a.goles_visitante != null ? a.goles_visitante : '-';
         return '<div class="attendance-item">' +
             '<div class="attendance-result ' + a.resultado + '">' + resLabel + '</div>' +
             '<div class="attendance-detail"><div class="attendance-teams">' +
-            (a.es_local ? 'Local' : 'Visitante') + ' vs ' + rivalEq.nombre + '</div>' +
+            eqL.nombre + ' vs ' + eqV.nombre + '</div>' +
             '<div class="attendance-meta">J' + (a.jornada || '-') + ' | ' + a.fecha + '</div></div>' +
-            '<div class="attendance-score">' + miGol + '-' + rivalGol + '</div></div>';
+            '<div class="attendance-score">' + gl + '-' + gv + '</div></div>';
     }).join('');
 }
 
@@ -2195,7 +2193,7 @@ async function loadAsistenciaComments(asistenciaId, container) {
                 return '<div class="comment-item' + (isMe ? ' comment-me' : '') + '">' +
                     '<div class="comment-header">' +
                     '<span class="comment-author">' + name + '</span>' +
-                    '<span class="comment-time">' + timeAgo(c.created_at) + '</span>' +
+                    '<span class="comment-time">' + getTimeAgo(c.created_at) + '</span>' +
                     '</div>' +
                     '<p class="comment-text">' + c.comentario + '</p>' +
                     '</div>';

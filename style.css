@@ -643,6 +643,51 @@ body {
     border-top: 1px solid var(--border); margin-top: 40px;
 }
 
+/* Sponsor Banner */
+.sponsor-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #f0faf5 0%, #e8f5ee 100%);
+    border: 1px solid #c8e6d5;
+    border-radius: 12px;
+    text-decoration: none;
+    color: #2d6a4f;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+.sponsor-banner:hover {
+    background: linear-gradient(135deg, #e8f5ee 0%, #d4edda 100%);
+    box-shadow: 0 2px 8px rgba(45,106,79,0.15);
+    transform: translateY(-1px);
+}
+.sponsor-logo {
+    height: 36px;
+    width: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.sponsor-text {
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.sponsor-text strong {
+    color: #1b4332;
+}
+@media (max-width: 480px) {
+    .sponsor-banner {
+        flex-direction: column;
+        gap: 6px;
+        padding: 8px 12px;
+    }
+    .sponsor-logo { height: 28px; }
+    .sponsor-text { font-size: 0.78rem; }
+}
+
 /* ===== CALENDARIO ===== */
 .calendario-subtitle {
     color: #888; font-size: 0.95rem; margin-bottom: 1.5rem;

@@ -1067,11 +1067,29 @@ async function handleAuth(e) {
 async function loadProfile(userId) {
     if (!supabaseClient) return;
     try {
-        const { data } = await supabaseClient.from('perfiles').select('*').eq('id', userId).single();
+        const { data, error } = await supabaseClient.from('perfiles').select('*').eq('id', userId).single();
         if (data) {
             currentUser.nombre = data.nombre || currentUser.nombre;
             currentUser.equipo = data.equipo || 'BSC';
             currentUser.username = data.username || currentUser.nombre;
+        } else if (!data) {
+            // Profile doesn't exist - auto-create it so FK constraints work
+            console.log('No profile found, creating one for user:', userId);
+            const defaultName = currentUser.email ? currentUser.email.split('@')[0] : 'Usuario';
+            const { error: insertErr } = await supabaseClient.from('perfiles').insert({
+                id: userId,
+                nombre: defaultName,
+                username: defaultName,
+                equipo: 'BSC'
+            });
+            if (insertErr) {
+                console.error('Error creating profile:', insertErr);
+            } else {
+                console.log('Profile auto-created for user:', userId);
+                currentUser.nombre = defaultName;
+                currentUser.username = defaultName;
+                currentUser.equipo = 'BSC';
+            }
         }
     } catch (e) { console.warn('Profile load error:', e); }
 }

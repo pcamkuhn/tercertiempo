@@ -2760,7 +2760,13 @@ async function trackVisit() {
         const { count } = await supabaseClient.from('foro_comentarios')
             .select('*', { count: 'exact', head: true }).eq('tipo', 'visita');
         const el = document.getElementById('visitCount');
-        if (el && count !== null) el.textContent = count.toLocaleString();
+        if (el && count !== null) {
+            el.textContent = count.toLocaleString();
+            // Only show counter to admin
+            if (currentUser && currentUser.id === ADMIN_USER_ID) {
+                document.getElementById('visitCounter')?.classList.remove('hidden');
+            }
+        }
     } catch (e) { console.warn('Visit tracking error:', e); }
 }
 

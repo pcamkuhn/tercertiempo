@@ -1025,9 +1025,15 @@ async function handleAuth(e) {
                 throw error;
             }
             currentUser = { id: data.user.id, email: data.user.email, nombre: data.user.email.split('@')[0] };
-            await loadProfile(data.user.id);
+            const isNew = await loadProfile(data.user.id);
             onLogin(currentUser); closeAuthModal();
-            showToast('Bienvenido, ' + currentUser.nombre + '.');
+            if (isNew) {
+                switchTab('perfil');
+                showToast('¡Bienvenido! Completa tu perfil para empezar.');
+                showProfileSetupBanner();
+            } else {
+                showToast('Bienvenido, ' + currentUser.nombre + '.');
+            }
         } else {
             const nombre = document.getElementById('inputNombreHincha').value;
             let equipo = document.getElementById('selectEquipo').value;
@@ -1065,7 +1071,8 @@ async function handleAuth(e) {
 }
 
 async function loadProfile(userId) {
-    if (!supabaseClient) return;
+    if (!supabaseClient) return false;
+    let isNewProfile = false;
     try {
         const { data, error } = await supabaseClient.from('perfiles').select('*').eq('id', userId).single();
         if (data) {
@@ -1089,9 +1096,11 @@ async function loadProfile(userId) {
                 currentUser.nombre = defaultName;
                 currentUser.username = defaultName;
                 currentUser.equipo = 'BSC';
+                isNewProfile = true;
             }
         }
     } catch (e) { console.warn('Profile load error:', e); }
+    return isNewProfile;
 }
 
 async function checkSession() {
@@ -1110,9 +1119,15 @@ async function checkSession() {
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session?.user) {
             currentUser = { id: session.user.id, email: session.user.email, nombre: session.user.email.split('@')[0] };
-            await loadProfile(session.user.id);
+            const isNew = await loadProfile(session.user.id);
             onLogin(currentUser);
-            showToast('Sesion activa. Bienvenido, ' + currentUser.nombre + '.');
+            if (isNew) {
+                switchTab('perfil');
+                showToast('¡Bienvenido! Completa tu perfil para empezar.');
+                showProfileSetupBanner();
+            } else {
+                showToast('Sesion activa. Bienvenido, ' + currentUser.nombre + '.');
+            }
         }
     } catch (e) { console.warn('Session check:', e); }
 
@@ -1121,9 +1136,15 @@ async function checkSession() {
         supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN' && session?.user && !currentUser) {
                 currentUser = { id: session.user.id, email: session.user.email, nombre: session.user.email.split('@')[0] };
-                await loadProfile(session.user.id);
+                const isNew = await loadProfile(session.user.id);
                 onLogin(currentUser);
-                showToast('Email confirmado. Bienvenido, ' + currentUser.nombre + '!');
+                if (isNew) {
+                    switchTab('perfil');
+                    showToast('¡Bienvenido! Completa tu perfil para empezar.');
+                    showProfileSetupBanner();
+                } else {
+                    showToast('Email confirmado. Bienvenido, ' + currentUser.nombre + '!');
+                }
             }
         });
     }
@@ -1887,6 +1908,8 @@ function initPerfil() {
             const eq = EQUIPOS[currentUser.equipo];
             document.getElementById('perfilEquipo').textContent = eq ? eq.nombre : (currentUser.equipo || '');
             document.getElementById('userName').textContent = nuevoNombre;
+            // Hide setup banner if visible
+            document.getElementById('profileSetupBanner')?.classList.add('hidden');
             showToast('Perfil actualizado.');
         } catch (e) { showToast('Error al guardar: ' + e.message); console.error(e); }
     });
@@ -1900,6 +1923,16 @@ function fillPerfilForm() {
     const eqSelect = document.getElementById('editPerfilEquipo');
     if (nameInput) nameInput.value = currentUser.nombre || '';
     if (eqSelect) eqSelect.value = currentUser.equipo || '';
+}
+
+function showProfileSetupBanner() {
+    const banner = document.getElementById('profileSetupBanner');
+    if (banner) banner.classList.remove('hidden');
+    // Focus the name input so user can start typing
+    setTimeout(() => {
+        const nameInput = document.getElementById('editPerfilNombre');
+        if (nameInput) { nameInput.value = ''; nameInput.focus(); }
+    }, 300);
 }
 
 // ===== SUB-TABS (Estadio & Comunidad) =====

@@ -1046,7 +1046,7 @@ async function handleAuth(e) {
                 }
                 await supabaseClient.from('perfiles').insert({
                     id: data.user.id, nombre: nombre || email.split('@')[0],
-                    equipo: equipo, partidos_estadio: 0
+                    username: email.split('@')[0], equipo: equipo
                 });
                 if (data.session) {
                     // Auto-confirmed: user is logged in
@@ -1070,7 +1070,7 @@ async function loadProfile(userId) {
         if (data) {
             currentUser.nombre = data.nombre || currentUser.nombre;
             currentUser.equipo = data.equipo || 'BSC';
-            currentUser.partidos_estadio = data.partidos_estadio || 0;
+            currentUser.username = data.username || currentUser.nombre;
         }
     } catch (e) { console.warn('Profile load error:', e); }
 }

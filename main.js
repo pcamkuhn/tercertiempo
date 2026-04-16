@@ -442,6 +442,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEditorial();
     checkSession();
     loadData();
+    trackVisit();
 });
 
 // ===== API-FOOTBALL =====
@@ -1182,6 +1183,7 @@ function onLogin(user) {
         else editorPanel.classList.add('hidden');
     }
     loadEditoriales();
+    trackVisit(); // Register visit after login
 }
 
 function onLogout() {
@@ -2111,18 +2113,32 @@ function getTimeAgo(dateStr) {
 async function loadHinchaProfilesData() {
     if (!supabaseClient) return [];
     try {
-        const { data } = await supabaseClient.from('perfiles').select('id, nombre, equipo').limit(50);
-        if (!data || data.length === 0) return [];
-        const profiles = [];
-        for (const p of data) {
-            const { data: asist } = await supabaseClient.from('asistencias_estadio')
-                .select('resultado').eq('user_id', p.id);
-            const total = asist ? asist.length : 0;
-            const w = asist ? asist.filter(a => a.resultado === 'W').length : 0;
-            const d = asist ? asist.filter(a => a.resultado === 'D').length : 0;
-            const l = asist ? asist.filter(a => a.resultado === 'L').length : 0;
-            profiles.push({ ...p, total, w, d, l });
+        // Two queries instead of N+1: all profiles + all attendance results
+        const [profilesRes, asistRes] = await Promise.all([
+            supabaseClient.from('perfiles').select('id, nombre, equipo').limit(100),
+            supabaseClient.from('asistencias_estadio').select('user_id, resultado')
+        ]);
+        const perfiles = profilesRes.data || [];
+        const asistencias = asistRes.data || [];
+        if (perfiles.length === 0) return [];
+
+        // Build stats map: { user_id: { total, w, d, l } }
+        const statsMap = {};
+        for (const a of asistencias) {
+            if (!statsMap[a.user_id]) statsMap[a.user_id] = { total: 0, w: 0, d: 0, l: 0 };
+            statsMap[a.user_id].total++;
+            if (a.resultado === 'W') statsMap[a.user_id].w++;
+            else if (a.resultado === 'D') statsMap[a.user_id].d++;
+            else if (a.resultado === 'L') statsMap[a.user_id].l++;
         }
+
+        const profiles = perfiles.map(p => ({
+            ...p,
+            total: statsMap[p.id]?.total || 0,
+            w: statsMap[p.id]?.w || 0,
+            d: statsMap[p.id]?.d || 0,
+            l: statsMap[p.id]?.l || 0
+        }));
         profiles.sort((a, b) => b.total - a.total);
         return profiles;
     } catch (e) { console.warn('Load profiles error:', e); return []; }
@@ -2357,13 +2373,27 @@ async function loadAsistenciaComments(asistenciaId, container) {
 // ===== EDITORIAL =====
 const ADMIN_USER_ID = '68c8b022-d4c1-4b88-aec1-d334eb4980f7'; // Pablo - editor
 
-let editorialUploadedImage = null; // stores base64 data URL
+let editorialUploadedImage = null; // stores base64 data URL (fallback)
+let editorialUploadedFile = null;  // stores resized Blob for Storage upload
+
+async function ensureStorageBucket() {
+    if (!supabaseClient) return;
+    try {
+        // Check if bucket exists by trying to list files
+        const { error } = await supabaseClient.storage.from('editorial-images').list('', { limit: 1 });
+        if (error && error.message.includes('not found')) {
+            console.log('Storage bucket not found. Please create "editorial-images" bucket in Supabase dashboard.');
+        }
+    } catch (e) { console.warn('Storage check:', e); }
+}
 
 function initEditorial() {
     // Show editor only for admin
     const editor = document.getElementById('editorialEditor');
     if (editor && currentUser && currentUser.id === ADMIN_USER_ID) {
         editor.classList.remove('hidden');
+        // Try to ensure storage bucket exists (silent, no error if already exists)
+        ensureStorageBucket();
     }
     // Populate equipo tags
     const tagSelect = document.getElementById('editorialEquipoTag');
@@ -2387,12 +2417,13 @@ function initEditorial() {
         if (file.size > 5 * 1024 * 1024) { showToast('Imagen muy grande. Max 5MB.'); return; }
         fileName.textContent = file.name;
         btnQuitar.style.display = 'inline-block';
-        // Resize and convert to base64
+        // Resize and prepare for upload
         try {
-            editorialUploadedImage = await resizeImageToBase64(file, 900, 0.8);
+            const resized = await resizeImageForUpload(file, 900, 0.8);
+            editorialUploadedImage = resized.dataUrl;
+            editorialUploadedFile = resized.blob;
             preview.src = editorialUploadedImage;
             preview.style.display = 'block';
-            // Clear URL field since we're using uploaded file
             document.getElementById('editorialFotoUrl').value = '';
         } catch (err) {
             showToast('Error al procesar imagen.');
@@ -2402,6 +2433,7 @@ function initEditorial() {
 
     btnQuitar?.addEventListener('click', () => {
         editorialUploadedImage = null;
+        editorialUploadedFile = null;
         fileInput.value = '';
         preview.style.display = 'none';
         preview.src = '';
@@ -2415,7 +2447,7 @@ function initEditorial() {
     loadEditoriales();
 }
 
-function resizeImageToBase64(file, maxWidth, quality) {
+function resizeImageForUpload(file, maxWidth, quality) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -2427,7 +2459,11 @@ function resizeImageToBase64(file, maxWidth, quality) {
                 canvas.width = w; canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
-                resolve(canvas.toDataURL('image/jpeg', quality));
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                // Also get Blob for Storage upload
+                canvas.toBlob((blob) => {
+                    resolve({ dataUrl, blob });
+                }, 'image/jpeg', quality);
             };
             img.onerror = reject;
             img.src = e.target.result;
@@ -2447,8 +2483,27 @@ async function publicarEditorial() {
     if (!titulo) { showToast('Escribe un titulo para el editorial.'); return; }
     if (!contenido) { showToast('Escribe el contenido del editorial.'); return; }
 
-    // Use uploaded image (base64) or URL
-    const fotoFinal = editorialUploadedImage || fotoUrl;
+    // Upload image to Supabase Storage if file was selected
+    let fotoFinal = fotoUrl;
+    if (editorialUploadedFile && supabaseClient) {
+        showToast('Subiendo imagen...');
+        try {
+            const fileName = 'editorial_' + Date.now() + '.jpg';
+            const { data: uploadData, error: uploadErr } = await supabaseClient.storage
+                .from('editorial-images').upload(fileName, editorialUploadedFile, {
+                    contentType: 'image/jpeg', upsert: false
+                });
+            if (uploadErr) throw uploadErr;
+            const { data: urlData } = supabaseClient.storage
+                .from('editorial-images').getPublicUrl(fileName);
+            fotoFinal = urlData.publicUrl;
+        } catch (upErr) {
+            console.warn('Storage upload failed, using base64 fallback:', upErr);
+            fotoFinal = editorialUploadedImage || fotoUrl;
+        }
+    } else if (!fotoFinal && editorialUploadedImage) {
+        fotoFinal = editorialUploadedImage; // base64 fallback
+    }
 
     // Encode foto info in texto as JSON prefix if present
     let textoFinal = contenido;
@@ -2480,6 +2535,7 @@ async function publicarEditorial() {
     document.getElementById('editorialFotoCredito').value = '';
     // Reset uploaded image
     editorialUploadedImage = null;
+    editorialUploadedFile = null;
     const fileInput = document.getElementById('editorialFotoFile');
     if (fileInput) fileInput.value = '';
     const preview = document.getElementById('editorialFotoPreview');
@@ -2648,6 +2704,32 @@ async function postEditorialComment(editorialId, texto) {
         if (error) throw error;
         await loadEditorialComments(editorialId);
     } catch (e) { showToast('Error al comentar: ' + e.message); console.error(e); }
+}
+
+// ===== VISIT COUNTER =====
+async function trackVisit() {
+    if (!supabaseClient) return;
+    try {
+        // Register this visit (one per session, only for logged-in users due to RLS)
+        const visited = sessionStorage.getItem('tt_visited');
+        if (!visited && currentUser) {
+            await supabaseClient.from('foro_comentarios').insert({
+                user_id: currentUser.id,
+                nombre: 'visit',
+                equipo: '',
+                tipo: 'visita',
+                filtro: new Date().toISOString().split('T')[0],
+                texto: '',
+                created_at: new Date().toISOString()
+            });
+            sessionStorage.setItem('tt_visited', '1');
+        }
+        // Load total count (SELECT is public per RLS)
+        const { count } = await supabaseClient.from('foro_comentarios')
+            .select('*', { count: 'exact', head: true }).eq('tipo', 'visita');
+        const el = document.getElementById('visitCount');
+        if (el && count !== null) el.textContent = count.toLocaleString();
+    } catch (e) { console.warn('Visit tracking error:', e); }
 }
 
 // ===== UTILITIES =====

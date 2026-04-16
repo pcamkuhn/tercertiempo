@@ -58,6 +58,10 @@
                 <span class="tab-icon">💬</span>
                 <span class="tab-label">Comunidad</span>
             </button>
+            <button class="tab-btn" data-tab="editorial">
+                <span class="tab-icon">📝</span>
+                <span class="tab-label">Editorial</span>
+            </button>
             <button class="tab-btn" data-tab="perfil">
                 <span class="tab-icon">👤</span>
                 <span class="tab-label">Perfil</span>
@@ -494,6 +498,32 @@
                         <div class="empty-state-sm">Cargando historial...</div>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- TAB: EDITORIAL -->
+        <section class="tab-content" id="tab-editorial">
+            <div class="section-header">
+                <h2>Editorial</h2>
+            </div>
+
+            <!-- Editor (solo admin) -->
+            <div class="editorial-editor hidden" id="editorialEditor">
+                <div class="editorial-form">
+                    <input type="text" class="input-field" id="editorialTitulo" placeholder="Titulo del editorial..." maxlength="120" style="font-size:16px; font-weight:600; margin-bottom:8px">
+                    <textarea class="input-field" id="editorialContenido" placeholder="Escribe tu editorial aqui..." rows="8" style="min-height:150px; font-size:14px; line-height:1.6"></textarea>
+                    <div style="display:flex; gap:8px; margin-top:8px">
+                        <select class="input-field" id="editorialEquipoTag" style="max-width:200px">
+                            <option value="">Tema general</option>
+                        </select>
+                        <button class="btn btn-primary" id="btnPublicarEditorial">Publicar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de editoriales -->
+            <div class="editorial-list" id="editorialList">
+                <div class="empty-state-sm">Cargando editoriales...</div>
             </div>
         </section>
 

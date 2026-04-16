@@ -439,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPerfil();
     initSubTabs();
     initComunidad();
+    initEditorial();
     checkSession();
     loadData();
 });
@@ -1133,6 +1134,14 @@ function onLogin(user) {
     loadAsistencias();
     updateRivalSelect();
     loadHinchaProfilesEstadio();
+
+    // Editorial: show editor if admin
+    const editorPanel = document.getElementById('editorialEditor');
+    if (editorPanel) {
+        if (user.id === ADMIN_USER_ID) editorPanel.classList.remove('hidden');
+        else editorPanel.classList.add('hidden');
+    }
+    loadEditoriales();
 }
 
 function onLogout() {
@@ -2414,6 +2423,98 @@ async function loadAsistenciaComments(asistenciaId, container) {
         container.innerHTML = '<div class="empty-state-sm" style="padding:8px">Error al cargar comentarios.</div>';
         console.error(e);
     }
+}
+
+// ===== EDITORIAL =====
+const ADMIN_USER_ID = '68c8b022-d4c1-4b88-aec1-d334eb4980f7'; // Pablo - editor
+
+function initEditorial() {
+    // Show editor only for admin
+    const editor = document.getElementById('editorialEditor');
+    if (editor && currentUser && currentUser.id === ADMIN_USER_ID) {
+        editor.classList.remove('hidden');
+    }
+    // Populate equipo tags
+    const tagSelect = document.getElementById('editorialEquipoTag');
+    if (tagSelect) {
+        Object.entries(EQUIPOS).forEach(([id, eq]) => {
+            const opt = document.createElement('option');
+            opt.value = id; opt.textContent = eq.nombre;
+            tagSelect.appendChild(opt);
+        });
+    }
+    // Publish button
+    document.getElementById('btnPublicarEditorial')?.addEventListener('click', publicarEditorial);
+    // Load editoriales
+    loadEditoriales();
+}
+
+async function publicarEditorial() {
+    if (!currentUser || currentUser.id !== ADMIN_USER_ID) { showToast('No tienes permisos para publicar.'); return; }
+    const titulo = document.getElementById('editorialTitulo')?.value.trim();
+    const contenido = document.getElementById('editorialContenido')?.value.trim();
+    const equipoTag = document.getElementById('editorialEquipoTag')?.value || '';
+    if (!titulo) { showToast('Escribe un titulo para el editorial.'); return; }
+    if (!contenido) { showToast('Escribe el contenido del editorial.'); return; }
+
+    const editorial = {
+        user_id: currentUser.id,
+        nombre: currentUser.nombre,
+        equipo: equipoTag,
+        tipo: 'editorial',
+        filtro: titulo,
+        texto: contenido,
+        created_at: new Date().toISOString()
+    };
+
+    if (supabaseClient) {
+        try {
+            const { error } = await supabaseClient.from('foro_comentarios').insert(editorial);
+            if (error) throw error;
+        } catch (e) { showToast('Error al publicar: ' + e.message); console.error(e); return; }
+    }
+
+    document.getElementById('editorialTitulo').value = '';
+    document.getElementById('editorialContenido').value = '';
+    document.getElementById('editorialEquipoTag').value = '';
+    showToast('Editorial publicado.');
+    loadEditoriales();
+}
+
+async function loadEditoriales() {
+    const list = document.getElementById('editorialList');
+    if (!list) return;
+    if (supabaseClient) {
+        try {
+            const { data } = await supabaseClient.from('foro_comentarios')
+                .select('*').eq('tipo', 'editorial')
+                .order('created_at', { ascending: false }).limit(30);
+            if (data && data.length > 0) {
+                list.innerHTML = data.map(renderEditorial).join('');
+                return;
+            }
+        } catch (e) { console.warn('Editorial load error:', e); }
+    }
+    list.innerHTML = '<div class="empty-state-sm">No hay editoriales publicados aun.</div>';
+}
+
+function renderEditorial(e) {
+    const eq = EQUIPOS[e.equipo];
+    const eqTag = eq ? '<span class="editorial-equipo-tag" style="background:' + eq.color1 + '; color:' + eq.color2 + '">' + eq.corto + '</span>' : '';
+    const fecha = new Date(e.created_at);
+    const fechaStr = fecha.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
+    const contenidoHtml = escapeHtml(e.texto).replace(/\n/g, '<br>');
+    return '<article class="editorial-card">' +
+        '<div class="editorial-header">' +
+        '<h3 class="editorial-titulo">' + escapeHtml(e.filtro) + '</h3>' +
+        eqTag +
+        '</div>' +
+        '<div class="editorial-meta">' +
+        '<span class="editorial-autor">Por ' + (e.nombre || 'Editor') + '</span>' +
+        '<span class="editorial-fecha">' + fechaStr + '</span>' +
+        '</div>' +
+        '<div class="editorial-body">' + contenidoHtml + '</div>' +
+        '</article>';
 }
 
 // ===== UTILITIES =====

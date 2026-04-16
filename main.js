@@ -728,7 +728,7 @@ function updateProdeGate() {
 }
 
 function guardarPronosticos() {
-    if (!currentUser) { showToast('Inicia sesion para guardar'); return; }
+    if (!currentUser || currentUser.id === 'demo') { showToast('Inicia sesion con tu cuenta para guardar'); return; }
     const inputs = document.querySelectorAll('.prode-input');
     const pronosticos = {};
     let completo = true;
@@ -755,7 +755,16 @@ async function savePronosticosDB(pronosticos) {
         if (error) throw error;
         showToast('Pronosticos guardados ✓');
         loadComunidadPronosticos();
-    } catch (e) { showToast('Error al guardar'); console.error(e); }
+    } catch (e) {
+        console.error('Error saving pronosticos:', e);
+        if (e.message && e.message.toLowerCase().includes('not confirmed')) {
+            showToast('Tu email no esta confirmado. Inicia sesion de nuevo para reenviar confirmacion.');
+        } else if (!currentUser || currentUser.id === 'demo') {
+            showToast('Inicia sesion para guardar pronosticos.');
+        } else {
+            showToast('Error al guardar: ' + (e.message || 'intenta de nuevo'));
+        }
+    }
 }
 
 async function loadMyPronosticos() {
@@ -1001,7 +1010,17 @@ async function handleAuth(e) {
     try {
         if (authMode === 'login') {
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-            if (error) throw error;
+            if (error) {
+                if (error.message && error.message.toLowerCase().includes('email not confirmed')) {
+                    showToast('Tu email no esta confirmado. Reenviando correo...');
+                    try {
+                        await supabaseClient.auth.resend({ type: 'signup', email, options: { emailRedirectTo: window.location.origin } });
+                        showToast('Correo de confirmacion reenviado. Revisa tu bandeja de entrada y spam.');
+                    } catch (re) { showToast('Revisa tu email para confirmar tu cuenta.'); }
+                    return;
+                }
+                throw error;
+            }
             currentUser = { id: data.user.id, email: data.user.email, nombre: data.user.email.split('@')[0] };
             await loadProfile(data.user.id);
             onLogin(currentUser); closeAuthModal();
@@ -1012,16 +1031,31 @@ async function handleAuth(e) {
             const equipoManual = document.getElementById('inputEquipoManual')?.value.trim();
             if (equipo === '_otro' && equipoManual) equipo = equipoManual;
             if (!equipo) equipo = 'NEUTRAL';
-            const { data, error } = await supabaseClient.auth.signUp({ email, password });
+            const { data, error } = await supabaseClient.auth.signUp({
+                email, password,
+                options: { emailRedirectTo: window.location.origin }
+            });
             if (error) throw error;
             if (data.user) {
+                // Check if email confirmation is required (identities will be empty)
+                if (data.user.identities && data.user.identities.length === 0) {
+                    showToast('Ya existe una cuenta con este email. Intenta iniciar sesion.');
+                    return;
+                }
                 await supabaseClient.from('perfiles').insert({
                     id: data.user.id, nombre: nombre || email.split('@')[0],
                     equipo: equipo, partidos_estadio: 0
                 });
-                currentUser = { id: data.user.id, email, nombre: nombre || email.split('@')[0], equipo: equipo };
-                onLogin(currentUser); closeAuthModal();
-                showToast('Cuenta creada. Bienvenido, ' + currentUser.nombre + '.');
+                if (data.session) {
+                    // Auto-confirmed: user is logged in
+                    currentUser = { id: data.user.id, email, nombre: nombre || email.split('@')[0], equipo: equipo };
+                    onLogin(currentUser); closeAuthModal();
+                    showToast('Cuenta creada. Bienvenido, ' + currentUser.nombre + '.');
+                } else {
+                    // Email confirmation required
+                    showToast('Cuenta creada. Revisa tu email para confirmar.');
+                    closeAuthModal();
+                }
             }
         }
     } catch (err) { showToast(err.message || 'Error de autenticacion'); console.error(err); }
@@ -1042,13 +1076,36 @@ async function loadProfile(userId) {
 async function checkSession() {
     if (!supabaseClient) return;
     try {
+        // Handle email confirmation callback (token in URL hash)
+        const hash = window.location.hash;
+        if (hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery'))) {
+            // Supabase client auto-processes the hash on init, just wait a moment
+            await new Promise(r => setTimeout(r, 500));
+            // Clean up URL
+            if (window.history.replaceState) {
+                window.history.replaceState(null, '', window.location.pathname);
+            }
+        }
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session?.user) {
             currentUser = { id: session.user.id, email: session.user.email, nombre: session.user.email.split('@')[0] };
             await loadProfile(session.user.id);
             onLogin(currentUser);
+            showToast('Sesion activa. Bienvenido, ' + currentUser.nombre + '.');
         }
     } catch (e) { console.warn('Session check:', e); }
+
+    // Listen for auth state changes (e.g., after email confirmation redirect)
+    if (supabaseClient) {
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session?.user && !currentUser) {
+                currentUser = { id: session.user.id, email: session.user.email, nombre: session.user.email.split('@')[0] };
+                await loadProfile(session.user.id);
+                onLogin(currentUser);
+                showToast('Email confirmado. Bienvenido, ' + currentUser.nombre + '!');
+            }
+        });
+    }
 }
 
 function onLogin(user) {

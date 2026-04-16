@@ -1183,6 +1183,7 @@ function onLogin(user) {
         else editorPanel.classList.add('hidden');
     }
     loadEditoriales();
+    loadLigas(); // Reload leagues after login
     trackVisit(); // Register visit after login
 }
 

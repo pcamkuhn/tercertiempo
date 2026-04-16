@@ -745,13 +745,19 @@ function guardarPronosticos() {
 
 async function savePronosticosDB(pronosticos) {
     try {
-        const records = Object.entries(pronosticos).map(([idx, scores]) => ({
-            user_id: currentUser.id, jornada: 9, partido_idx: parseInt(idx),
-            gol_local: parseInt(scores.home), gol_visitante: parseInt(scores.away),
+        // Build marcadores JSONB: { "0": {"home":1,"away":2}, "1": {...}, ... }
+        const marcadores = {};
+        Object.entries(pronosticos).forEach(([idx, scores]) => {
+            marcadores[idx] = { home: parseInt(scores.home), away: parseInt(scores.away) };
+        });
+        const record = {
+            user_id: currentUser.id,
+            jornada: 9,
+            marcadores: marcadores,
             updated_at: new Date().toISOString()
-        }));
+        };
         const { error } = await supabaseClient.from('pronosticos')
-            .upsert(records, { onConflict: 'user_id,jornada,partido_idx' });
+            .upsert(record, { onConflict: 'user_id,jornada' });
         if (error) throw error;
         showToast('Pronosticos guardados ✓');
         loadComunidadPronosticos();
@@ -771,15 +777,16 @@ async function loadMyPronosticos() {
     if (!currentUser || !supabaseClient) return;
     try {
         const { data } = await supabaseClient.from('pronosticos')
-            .select('partido_idx, gol_local, gol_visitante')
+            .select('marcadores')
             .eq('user_id', currentUser.id)
-            .eq('jornada', 9);
-        if (data && data.length > 0) {
-            data.forEach(p => {
-                const homeInput = document.querySelector('.prode-input[data-match="' + p.partido_idx + '"][data-side="home"]');
-                const awayInput = document.querySelector('.prode-input[data-match="' + p.partido_idx + '"][data-side="away"]');
-                if (homeInput) homeInput.value = p.gol_local;
-                if (awayInput) awayInput.value = p.gol_visitante;
+            .eq('jornada', 9)
+            .single();
+        if (data && data.marcadores) {
+            Object.entries(data.marcadores).forEach(([idx, scores]) => {
+                const homeInput = document.querySelector('.prode-input[data-match="' + idx + '"][data-side="home"]');
+                const awayInput = document.querySelector('.prode-input[data-match="' + idx + '"][data-side="away"]');
+                if (homeInput) homeInput.value = scores.home;
+                if (awayInput) awayInput.value = scores.away;
             });
         }
     } catch (e) { console.warn('Error loading my pronosticos:', e); }
@@ -791,64 +798,59 @@ async function loadComunidadPronosticos() {
     if (!container) return;
     try {
         const { data } = await supabaseClient.from('pronosticos')
-            .select('user_id, partido_idx, gol_local, gol_visitante')
-            .eq('jornada', 9)
-            .order('user_id');
+            .select('user_id, marcadores')
+            .eq('jornada', 9);
         if (!data || data.length === 0) {
             container.innerHTML = '<div class="ranking-empty">Aun nadie ha enviado pronosticos para esta jornada.</div>';
             return;
         }
-        // Group by user
-        const byUser = {};
-        data.forEach(p => {
-            if (!byUser[p.user_id]) byUser[p.user_id] = [];
-            byUser[p.user_id].push(p);
-        });
-        // Get user emails/names
+        // Get user names from perfiles
         let userNames = {};
         try {
-            const userIds = Object.keys(byUser);
-            const { data: members } = await supabaseClient.from('liga_miembros')
-                .select('user_id')
-                .in('user_id', userIds);
-            // We can't directly query auth.users from client, so we use email from current user
-            // and show user_id short hash for others
+            const userIds = data.map(d => d.user_id);
+            const { data: perfiles } = await supabaseClient.from('perfiles')
+                .select('id, nombre')
+                .in('id', userIds);
+            if (perfiles) {
+                perfiles.forEach(p => { userNames[p.id] = p.nombre; });
+            }
             userIds.forEach(uid => {
-                if (currentUser && uid === currentUser.id) {
-                    userNames[uid] = currentUser.email ? currentUser.email.split('@')[0] : 'Tu';
-                } else {
+                if (!userNames[uid] && currentUser && uid === currentUser.id) {
+                    userNames[uid] = currentUser.nombre || currentUser.email?.split('@')[0] || 'Tu';
+                } else if (!userNames[uid]) {
                     userNames[uid] = 'Jugador ' + uid.substring(0, 6);
                 }
             });
         } catch(e) { /* ignore */ }
 
         let html = '';
-        const userEntries = Object.entries(byUser);
-        // Show current user first
-        userEntries.sort((a, b) => {
-            if (currentUser && a[0] === currentUser.id) return -1;
-            if (currentUser && b[0] === currentUser.id) return 1;
+        // Sort: current user first
+        data.sort((a, b) => {
+            if (currentUser && a.user_id === currentUser.id) return -1;
+            if (currentUser && b.user_id === currentUser.id) return 1;
             return 0;
         });
-        userEntries.forEach(([uid, preds]) => {
+        data.forEach(row => {
+            const uid = row.user_id;
+            const marcadores = row.marcadores || {};
             const isMe = currentUser && uid === currentUser.id;
             const name = userNames[uid] || ('Jugador ' + uid.substring(0, 6));
+            const predCount = Object.keys(marcadores).length;
             html += '<div class="comunidad-user' + (isMe ? ' comunidad-me' : '') + '">';
             html += '<div class="comunidad-user-header">';
             html += '<span class="comunidad-name">' + (isMe ? '⭐ ' : '👤 ') + name + '</span>';
-            html += '<span class="comunidad-count">' + preds.length + '/8 partidos</span>';
+            html += '<span class="comunidad-count">' + predCount + '/8 partidos</span>';
             html += '</div>';
             html += '<div class="comunidad-user-preds">';
-            preds.sort((a, b) => a.partido_idx - b.partido_idx);
-            preds.forEach(p => {
-                const match = JORNADA_PRODE[p.partido_idx];
+            Object.entries(marcadores).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).forEach(([idx, scores]) => {
+                const match = JORNADA_PRODE[parseInt(idx)];
                 if (!match) return;
                 const eqL = EQUIPOS[match.local] || { corto: match.local, logo: '' };
                 const eqV = EQUIPOS[match.visitante] || { corto: match.visitante, logo: '' };
                 html += '<div class="comunidad-pred">';
                 html += '<img src="' + eqL.logo + '" class="comunidad-logo">';
                 html += '<span class="comunidad-team">' + eqL.corto + '</span>';
-                html += '<span class="comunidad-score">' + p.gol_local + ' - ' + p.gol_visitante + '</span>';
+                html += '<span class="comunidad-score">' + scores.home + ' - ' + scores.away + '</span>';
                 html += '<span class="comunidad-team">' + eqV.corto + '</span>';
                 html += '<img src="' + eqV.logo + '" class="comunidad-logo">';
                 html += '</div>';

@@ -8,7 +8,7 @@ const SUPABASE_URL = 'https://upuimmozwczajuxnsgoi.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVwdWltbW96d2N6YWp1eG5zZ29pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxMzEzMTQsImV4cCI6MjA5MTcwNzMxNH0.QKDmbwXSB5djbavS5T-U3z6aIxcw8akNwi4771Z0dF8';
 
 // API-Football: Registrate gratis en api-football.com y pega tu key aqui
-const API_KEY = ''; // <-- TU API KEY AQUI
+const API_KEY = 'fa1b04e74b165f014a4e8456bf2cbe50';
 const API_BASE = 'https://v3.football.api-sports.io';
 const LEAGUE_ID = 242;
 const SEASON = 2026;

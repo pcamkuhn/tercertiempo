@@ -66,6 +66,10 @@
                 <span class="tab-icon">👤</span>
                 <span class="tab-label">Perfil</span>
             </button>
+            <button class="tab-btn hidden" data-tab="admin" id="adminTabBtn">
+                <span class="tab-icon">&#9881;</span>
+                <span class="tab-label">Admin</span>
+            </button>
         </div>
     </nav>
 
@@ -589,6 +593,45 @@
                 </div>
             </div>
         </section>
+
+        <!-- TAB ADMIN: Panel de Administracion (solo visible para admin) -->
+        <section class="tab-content" id="tab-admin">
+            <div class="section-header">
+                <h2>Panel de Administracion</h2>
+            </div>
+            <div class="admin-panel">
+                <!-- Ingreso manual de resultados -->
+                <div class="perfil-card" style="margin-bottom:16px">
+                    <h4>Ingresar Resultados de Jornada</h4>
+                    <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:12px">Selecciona una fecha del calendario e ingresa los marcadores de cada partido.</p>
+                    <div class="form-group" style="margin-bottom:12px">
+                        <label style="font-size:0.8rem; color:var(--text-secondary)">Jornada</label>
+                        <select class="input-field" id="adminJornadaSelect">
+                            <option value="">Selecciona jornada</option>
+                        </select>
+                    </div>
+                    <div id="adminMatchesGrid" class="admin-matches-grid"></div>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="btn btn-primary btn-sm" id="btnGuardarResultados" disabled>Guardar Resultados</button>
+                        <button class="btn btn-sm" id="btnPreviewStandings" style="background:var(--card-bg); border:1px solid var(--border);">Vista Previa Tabla</button>
+                    </div>
+                    <div id="adminStatus" style="margin-top:8px; font-size:0.8rem; color:var(--text-secondary);"></div>
+                </div>
+
+                <!-- Vista previa de tabla -->
+                <div class="perfil-card hidden" id="adminPreviewCard">
+                    <h4>Vista Previa - Tabla de Posiciones</h4>
+                    <div id="adminPreviewTable"></div>
+                </div>
+
+                <!-- Instrucciones para actualizar codigo -->
+                <div class="perfil-card" style="margin-bottom:16px">
+                    <h4>Datos Actuales</h4>
+                    <p style="font-size:0.8rem; color:var(--text-secondary);" id="adminCurrentInfo">Cargando...</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <!-- Auth Modal -->

@@ -893,3 +893,23 @@ body {
 .editorial-foto-credito { display: block; font-size: 0.75rem; color: var(--text-secondary); padding: 4px 8px; background: rgba(0,0,0,0.03); font-style: italic; }
 .editorial-body { font-size: 0.95rem; line-height: 1.7; color: var(--text-primary); }
 .perfil-edit-form { display: flex; flex-direction: column; gap: 4px; }
+
+/* ===== ADMIN PANEL ===== */
+.admin-matches-grid { display: flex; flex-direction: column; gap: 8px; }
+.admin-match-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+}
+.admin-team-home, .admin-team-away {
+    display: flex; align-items: center; gap: 6px; flex: 1; font-size: 0.85rem; font-weight: 600;
+}
+.admin-team-home { justify-content: flex-end; }
+.admin-team-away { justify-content: flex-start; }
+.admin-team-logo { width: 24px; height: 24px; object-fit: contain; }
+.admin-score-input {
+    width: 42px; text-align: center; padding: 6px 4px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);
+    font-size: 1rem; font-weight: 700;
+}
+.admin-score-input:focus { border-color: var(--accent); outline: none; }
+.admin-vs { font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; }

@@ -637,6 +637,63 @@ body {
 @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
 
 /* ===== FOOTER ===== */
+/* Ranking Hinchas */
+.ranking-hinchas-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.ranking-hincha-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+.ranking-hincha-pos {
+    font-size: 1.1rem;
+    min-width: 24px;
+    text-align: center;
+}
+.ranking-hincha-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+.ranking-hincha-info {
+    flex: 1;
+    min-width: 0;
+}
+.ranking-hincha-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+.ranking-hincha-bar-bg {
+    height: 6px;
+    background: var(--bg-secondary);
+    border-radius: 3px;
+    overflow: hidden;
+}
+.ranking-hincha-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+.ranking-hincha-count {
+    font-size: 0.85rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 8px;
+    min-width: 32px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
 .app-footer {
     text-align: center; padding: 24px;
     color: var(--text-muted); font-size: 12px;

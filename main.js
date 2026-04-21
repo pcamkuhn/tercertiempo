@@ -588,6 +588,7 @@ function renderAll() {
     renderStandings();
     renderStats();
     renderProde();
+    loadRankingHinchas();
 }
 
 // ===== TAB NAVIGATION =====
@@ -2736,6 +2737,68 @@ async function postEditorialComment(editorialId, texto) {
         if (error) throw error;
         await loadEditorialComments(editorialId);
     } catch (e) { showToast('Error al comentar: ' + e.message); console.error(e); }
+}
+
+// ===== RANKING DE CLUBES POR HINCHAS =====
+async function loadRankingHinchas() {
+    const container = document.getElementById('rankingHinchasContainer');
+    if (!container) return;
+
+    if (!supabaseClient) {
+        container.innerHTML = '<div class="empty-state-sm">No hay datos disponibles.</div>';
+        return;
+    }
+
+    try {
+        const { data: perfiles } = await supabaseClient.from('perfiles').select('equipo');
+        if (!perfiles || perfiles.length === 0) {
+            container.innerHTML = '<div class="empty-state-sm">Aun no hay hinchas registrados.</div>';
+            return;
+        }
+
+        // Count fans per club
+        const counts = {};
+        for (const p of perfiles) {
+            const eq = p.equipo || 'NEUTRAL';
+            if (eq === 'NEUTRAL' || eq === '_neutral') continue;
+            counts[eq] = (counts[eq] || 0) + 1;
+        }
+
+        // Sort descending
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        if (sorted.length === 0) {
+            container.innerHTML = '<div class="empty-state-sm">Aun no hay hinchas registrados.</div>';
+            return;
+        }
+
+        const maxCount = sorted[0][1];
+        let html = '<div class="ranking-hinchas-list">';
+        sorted.forEach(([eqId, count], i) => {
+            const eq = EQUIPOS[eqId];
+            const nombre = eq ? eq.nombre : eqId;
+            const color1 = eq ? eq.color1 : '#888';
+            const color2 = eq ? eq.color2 : '#fff';
+            const logo = eq ? eq.logo : '';
+            const pct = Math.round((count / maxCount) * 100);
+
+            html += '<div class="ranking-hincha-row">' +
+                '<div class="ranking-hincha-pos" style="color:' + color1 + '; font-weight:800;">' + (i + 1) + '</div>' +
+                (logo ? '<img src="' + logo + '" class="ranking-hincha-logo" alt="' + nombre + '">' : '') +
+                '<div class="ranking-hincha-info">' +
+                    '<div class="ranking-hincha-name">' + nombre + '</div>' +
+                    '<div class="ranking-hincha-bar-bg">' +
+                        '<div class="ranking-hincha-bar-fill" style="width:' + pct + '%; background:' + color1 + ';"></div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="ranking-hincha-count" style="background:' + color1 + '; color:' + color2 + ';">' + count + '</div>' +
+            '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    } catch (e) {
+        console.warn('Ranking hinchas error:', e);
+        container.innerHTML = '<div class="empty-state-sm">Error al cargar ranking.</div>';
+    }
 }
 
 // ===== VISIT COUNTER =====

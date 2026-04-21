@@ -185,6 +185,21 @@ const JORNADA_PRODE = [
 ];
 const CURRENT_JORNADA = 10; // Jornada activa para el Prode
 
+// Orden de partidos que se uso en el Prode para cada jornada pasada
+// (necesario para mapear indices de predicciones a partidos reales)
+const PRODE_MATCH_ORDER = {
+    9: [
+        { local: 'LDN', visitante: 'AUC' },
+        { local: 'EME', visitante: 'GCY' },
+        { local: 'MUS', visitante: 'TEC' },
+        { local: 'UCA', visitante: 'LIB' },
+        { local: 'OVA', visitante: 'DLF' },
+        { local: 'MAN', visitante: 'CUE' },
+        { local: 'IDV', visitante: 'LDU' },
+        { local: 'MAC', visitante: 'BSC' }
+    ]
+};
+
 // ===== CALENDARIO COMPLETO LIGAPRO 2026 =====
 const CALENDARIO_FECHAS = [
     // Fecha 10 (21-23 Abril)
@@ -684,9 +699,11 @@ function renderProde() {
             '<div class="prode-team away"><span>' + visitante.corto + '</span><div class="team-badge"><img src="' + visitante.logo + '" alt="' + visitante.corto + '"></div></div></div>';
     }).join('');
 
+    document.getElementById('prodeJornada').textContent = 'Jornada ' + CURRENT_JORNADA;
     document.getElementById('btnGuardarProde')?.addEventListener('click', guardarPronosticos);
     loadMyPronosticos();
     loadComunidadPronosticos();
+    loadProdeHistory();
 }
 
 function updateProdeGate() {
@@ -836,6 +853,280 @@ async function loadComunidadPronosticos() {
     } catch (e) {
         console.warn('Error loading comunidad pronosticos:', e);
         container.innerHTML = '<div class="ranking-empty">Error al cargar predicciones.</div>';
+    }
+}
+
+// ===== PRODE HISTORY & GLOBAL RANKING =====
+async function loadProdeHistory() {
+    if (!supabaseClient) return;
+    const tabsContainer = document.getElementById('prodeHistoryTabs');
+    if (!tabsContainer) return;
+
+    // Find jornadas that have both results AND prode match order
+    const completedProdeJornadas = Object.keys(PRODE_MATCH_ORDER).map(Number).sort((a, b) => b - a);
+
+    if (completedProdeJornadas.length === 0) {
+        tabsContainer.innerHTML = '';
+        document.getElementById('prodeHistoryContent').innerHTML = '<div class="ranking-empty">Aun no hay jornadas completadas con predicciones.</div>';
+        return;
+    }
+
+    // Render jornada tabs
+    tabsContainer.innerHTML = completedProdeJornadas.map(j =>
+        '<button class="prode-history-tab" data-jornada="' + j + '">Fecha ' + j + '</button>'
+    ).join('');
+
+    tabsContainer.querySelectorAll('.prode-history-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabsContainer.querySelectorAll('.prode-history-tab').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            loadProdeJornadaResults(parseInt(btn.dataset.jornada));
+        });
+    });
+
+    // Auto-load the most recent completed jornada
+    const firstTab = tabsContainer.querySelector('.prode-history-tab');
+    if (firstTab) {
+        firstTab.classList.add('active');
+        loadProdeJornadaResults(completedProdeJornadas[0]);
+    }
+
+    // Load global ranking
+    loadProdeGlobalRanking(completedProdeJornadas);
+}
+
+async function loadProdeJornadaResults(jornada) {
+    const container = document.getElementById('prodeHistoryContent');
+    if (!container || !supabaseClient) return;
+
+    container.innerHTML = '<div class="ranking-empty">Cargando resultados...</div>';
+
+    const matchOrder = PRODE_MATCH_ORDER[jornada];
+    if (!matchOrder) { container.innerHTML = '<div class="ranking-empty">No hay datos del Prode para esta jornada.</div>'; return; }
+
+    // Get real results
+    const realResults = RESULTADOS_PASADOS.filter(r => r.jornada === jornada);
+
+    // Map match order indices to real results
+    const matchResults = matchOrder.map(m => {
+        return realResults.find(r => r.local === m.local && r.visitante === m.visitante) || null;
+    });
+
+    try {
+        // Get all predictions for this jornada
+        const { data: predictions } = await supabaseClient.from('pronosticos')
+            .select('user_id, marcadores')
+            .eq('jornada', jornada);
+
+        if (!predictions || predictions.length === 0) {
+            container.innerHTML = '<div class="ranking-empty">Nadie envio predicciones para la Fecha ' + jornada + '.</div>';
+            return;
+        }
+
+        // Get user names
+        const userIds = predictions.map(p => p.user_id);
+        let userNames = {};
+        try {
+            const { data: perfiles } = await supabaseClient.from('perfiles')
+                .select('id, nombre, equipo')
+                .in('id', userIds);
+            if (perfiles) perfiles.forEach(p => { userNames[p.id] = { nombre: p.nombre, equipo: p.equipo }; });
+        } catch(e) {}
+
+        // Calculate points for each user
+        const userScores = predictions.map(pred => {
+            const marcadores = pred.marcadores || {};
+            let totalPts = 0;
+            let exactos = 0;
+            let aciertos = 0;
+            const matchDetails = [];
+
+            matchOrder.forEach((m, idx) => {
+                const real = matchResults[idx];
+                const userPred = marcadores[String(idx)];
+                let pts = 0;
+                let status = 'miss';
+
+                if (real && userPred) {
+                    pts = calcMatchPoints(userPred.home, userPred.away, real.gl, real.gv);
+                    if (pts === 3) { exactos++; status = 'exact'; }
+                    else if (pts === 1) { aciertos++; status = 'correct'; }
+                }
+
+                matchDetails.push({
+                    local: m.local, visitante: m.visitante,
+                    predL: userPred ? userPred.home : '-', predV: userPred ? userPred.away : '-',
+                    realL: real ? real.gl : '?', realV: real ? real.gv : '?',
+                    pts, status
+                });
+                totalPts += pts;
+            });
+
+            const info = userNames[pred.user_id] || { nombre: 'Jugador ' + pred.user_id.substring(0, 6), equipo: null };
+            return {
+                user_id: pred.user_id,
+                nombre: info.nombre,
+                equipo: info.equipo,
+                totalPts, exactos, aciertos, matchDetails
+            };
+        });
+
+        // Sort by points descending
+        userScores.sort((a, b) => b.totalPts - a.totalPts || b.exactos - a.exactos);
+
+        // Render results header (real results)
+        let html = '<div class="prode-results-real">';
+        html += '<h4>Resultados Reales — Fecha ' + jornada + '</h4>';
+        html += '<div class="prode-real-matches">';
+        matchOrder.forEach((m, idx) => {
+            const real = matchResults[idx];
+            const eqL = EQUIPOS[m.local] || { corto: m.local, logo: '' };
+            const eqV = EQUIPOS[m.visitante] || { corto: m.visitante, logo: '' };
+            html += '<div class="prode-real-match">' +
+                '<img src="' + eqL.logo + '" class="prode-real-logo">' +
+                '<span class="prode-real-team">' + eqL.corto + '</span>' +
+                '<span class="prode-real-score">' + (real ? real.gl : '?') + ' - ' + (real ? real.gv : '?') + '</span>' +
+                '<span class="prode-real-team">' + eqV.corto + '</span>' +
+                '<img src="' + eqV.logo + '" class="prode-real-logo"></div>';
+        });
+        html += '</div></div>';
+
+        // Render each user's predictions with comparison
+        html += '<div class="prode-results-users">';
+        userScores.forEach((user, rank) => {
+            const isMe = currentUser && user.user_id === currentUser.id;
+            const medal = rank === 0 ? '🥇' : rank === 1 ? '🥈' : rank === 2 ? '🥉' : (rank + 1);
+            const eqTag = user.equipo && EQUIPOS[user.equipo] ? '<span class="prode-user-equipo" style="background:' + EQUIPOS[user.equipo].color1 + '; color:' + EQUIPOS[user.equipo].color2 + ';">' + user.equipo + '</span>' : '';
+
+            html += '<div class="prode-result-user' + (isMe ? ' prode-result-me' : '') + '">';
+            html += '<div class="prode-result-user-header" data-uid="' + user.user_id + '">';
+            html += '<span class="prode-result-rank">' + medal + '</span>';
+            html += '<span class="prode-result-name">' + (isMe ? '⭐ ' : '') + user.nombre + ' ' + eqTag + '</span>';
+            html += '<span class="prode-result-stats">' + user.exactos + ' exacto' + (user.exactos !== 1 ? 's' : '') + ' · ' + user.aciertos + ' acierto' + (user.aciertos !== 1 ? 's' : '') + '</span>';
+            html += '<span class="prode-result-pts">' + user.totalPts + ' pts</span>';
+            html += '<span class="prode-result-toggle">▼</span>';
+            html += '</div>';
+
+            // Collapsible detail
+            html += '<div class="prode-result-detail hidden" id="prodeDetail_' + user.user_id.substring(0, 8) + '">';
+            user.matchDetails.forEach(md => {
+                const eqL = EQUIPOS[md.local] || { corto: md.local, logo: '' };
+                const eqV = EQUIPOS[md.visitante] || { corto: md.visitante, logo: '' };
+                const statusClass = md.status === 'exact' ? 'prode-exact' : md.status === 'correct' ? 'prode-correct' : 'prode-miss';
+                const statusLabel = md.status === 'exact' ? '+3' : md.status === 'correct' ? '+1' : '0';
+                html += '<div class="prode-detail-match ' + statusClass + '">' +
+                    '<span class="prode-detail-teams">' + eqL.corto + ' vs ' + eqV.corto + '</span>' +
+                    '<span class="prode-detail-pred">Pred: ' + md.predL + '-' + md.predV + '</span>' +
+                    '<span class="prode-detail-real">Real: ' + md.realL + '-' + md.realV + '</span>' +
+                    '<span class="prode-detail-pts ' + statusClass + '">' + statusLabel + '</span></div>';
+            });
+            html += '</div></div>';
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+
+        // Add toggle listeners for detail expand
+        container.querySelectorAll('.prode-result-user-header').forEach(hdr => {
+            hdr.addEventListener('click', () => {
+                const uid = hdr.dataset.uid.substring(0, 8);
+                const detail = document.getElementById('prodeDetail_' + uid);
+                if (detail) {
+                    detail.classList.toggle('hidden');
+                    hdr.querySelector('.prode-result-toggle').textContent = detail.classList.contains('hidden') ? '▼' : '▲';
+                }
+            });
+        });
+
+    } catch (e) {
+        console.warn('Error loading prode jornada results:', e);
+        container.innerHTML = '<div class="ranking-empty">Error al cargar resultados.</div>';
+    }
+}
+
+async function loadProdeGlobalRanking(completedJornadas) {
+    const container = document.getElementById('rankingList');
+    if (!container || !supabaseClient) return;
+
+    try {
+        // Get ALL predictions for completed jornadas
+        const { data: allPreds } = await supabaseClient.from('pronosticos')
+            .select('user_id, jornada, marcadores')
+            .in('jornada', completedJornadas);
+
+        if (!allPreds || allPreds.length === 0) {
+            container.innerHTML = '<div class="ranking-empty">Aun no hay predicciones registradas.</div>';
+            return;
+        }
+
+        // Get user names
+        const uniqueUserIds = [...new Set(allPreds.map(p => p.user_id))];
+        let userNames = {};
+        try {
+            const { data: perfiles } = await supabaseClient.from('perfiles')
+                .select('id, nombre, equipo')
+                .in('id', uniqueUserIds);
+            if (perfiles) perfiles.forEach(p => { userNames[p.id] = { nombre: p.nombre, equipo: p.equipo }; });
+        } catch(e) {}
+
+        // Calculate total points per user across all jornadas
+        const userTotals = {};
+        allPreds.forEach(pred => {
+            if (!userTotals[pred.user_id]) {
+                const info = userNames[pred.user_id] || { nombre: 'Jugador ' + pred.user_id.substring(0, 6), equipo: null };
+                userTotals[pred.user_id] = { nombre: info.nombre, equipo: info.equipo, totalPts: 0, exactos: 0, aciertos: 0, jornadas: 0 };
+            }
+
+            const matchOrder = PRODE_MATCH_ORDER[pred.jornada];
+            if (!matchOrder) return;
+
+            const realResults = RESULTADOS_PASADOS.filter(r => r.jornada === pred.jornada);
+            const marcadores = pred.marcadores || {};
+            let hadPreds = false;
+
+            matchOrder.forEach((m, idx) => {
+                const real = realResults.find(r => r.local === m.local && r.visitante === m.visitante);
+                const userPred = marcadores[String(idx)];
+                if (real && userPred) {
+                    hadPreds = true;
+                    const pts = calcMatchPoints(userPred.home, userPred.away, real.gl, real.gv);
+                    userTotals[pred.user_id].totalPts += pts;
+                    if (pts === 3) userTotals[pred.user_id].exactos++;
+                    else if (pts === 1) userTotals[pred.user_id].aciertos++;
+                }
+            });
+            if (hadPreds) userTotals[pred.user_id].jornadas++;
+        });
+
+        // Sort by total points
+        const ranking = Object.entries(userTotals)
+            .map(([uid, data]) => ({ user_id: uid, ...data }))
+            .sort((a, b) => b.totalPts - a.totalPts || b.exactos - a.exactos);
+
+        if (ranking.length === 0) {
+            container.innerHTML = '<div class="ranking-empty">Aun no hay puntos calculados.</div>';
+            return;
+        }
+
+        let html = '<div class="prode-global-ranking">';
+        ranking.forEach((user, i) => {
+            const isMe = currentUser && user.user_id === currentUser.id;
+            const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+            const posClass = i === 0 ? ' rank-gold' : i === 1 ? ' rank-silver' : i === 2 ? ' rank-bronze' : '';
+            const eqTag = user.equipo && EQUIPOS[user.equipo] ? '<span class="prode-user-equipo" style="background:' + EQUIPOS[user.equipo].color1 + '; color:' + EQUIPOS[user.equipo].color2 + ';">' + user.equipo + '</span>' : '';
+
+            html += '<div class="rank-row' + posClass + (isMe ? ' rank-me' : '') + '">' +
+                '<span class="rank-pos">' + (medal || (i + 1)) + '</span>' +
+                '<div class="rank-info"><span class="rank-name">' + (isMe ? '⭐ ' : '') + user.nombre + ' ' + eqTag + '</span>' +
+                '<span class="rank-detail">' + user.exactos + ' exactos · ' + user.aciertos + ' aciertos · ' + user.jornadas + ' jornada' + (user.jornadas !== 1 ? 's' : '') + '</span></div>' +
+                '<span class="rank-pts">' + user.totalPts + '</span></div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+
+    } catch (e) {
+        console.warn('Error loading global ranking:', e);
+        container.innerHTML = '<div class="ranking-empty">Error al cargar ranking.</div>';
     }
 }
 

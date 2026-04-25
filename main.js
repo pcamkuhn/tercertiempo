@@ -42,27 +42,27 @@ const EQUIPOS = {
     'MAN': { nombre: 'Manta FC', corto: 'MAN', color1: '#1B5E20', color2: '#FFF', logo: ESPN_LOGO + '10307.png' }
 };
 
-// ===== DATOS FALLBACK — LigaPro 2026 Fecha 8 (12 Abril) =====
+// ===== DATOS FALLBACK — LigaPro 2026 Fecha 10 (23 Abril) =====
 const FALLBACK_STANDINGS = [
-    { id: 'UCA', pj: 9, g: 5, e: 4, p: 0, gf: 15, gc: 4 },
-    { id: 'IDV', pj: 9, g: 6, e: 1, p: 2, gf: 16, gc: 10 },
-    { id: 'BSC', pj: 9, g: 4, e: 3, p: 2, gf: 9, gc: 7 },
-    { id: 'CUE', pj: 9, g: 4, e: 2, p: 3, gf: 10, gc: 8 },
-    { id: 'AUC', pj: 9, g: 3, e: 3, p: 3, gf: 10, gc: 9 },
-    { id: 'MAC', pj: 9, g: 3, e: 4, p: 2, gf: 9, gc: 6 },
-    { id: 'MUS', pj: 9, g: 3, e: 4, p: 2, gf: 10, gc: 9 },
-    { id: 'DLF', pj: 9, g: 3, e: 3, p: 3, gf: 4, gc: 4 },
-    { id: 'TEC', pj: 9, g: 3, e: 2, p: 4, gf: 8, gc: 9 },
-    { id: 'GCY', pj: 9, g: 3, e: 3, p: 3, gf: 8, gc: 10 },
-    { id: 'LDU', pj: 9, g: 4, e: 1, p: 4, gf: 9, gc: 9 },
-    { id: 'LIB', pj: 9, g: 2, e: 4, p: 3, gf: 8, gc: 10 },
-    { id: 'OVA', pj: 9, g: 2, e: 3, p: 4, gf: 11, gc: 14 },
-    { id: 'LDN', pj: 9, g: 1, e: 4, p: 4, gf: 4, gc: 10 },
-    { id: 'EME', pj: 9, g: 2, e: 2, p: 5, gf: 7, gc: 13 },
-    { id: 'MAN', pj: 9, g: 1, e: 1, p: 7, gf: 2, gc: 10 }
+    { id: 'UCA', pj: 10, g: 6, e: 4, p: 0, gf: 19, gc: 4 },
+    { id: 'IDV', pj: 10, g: 7, e: 1, p: 2, gf: 17, gc: 10 },
+    { id: 'BSC', pj: 10, g: 5, e: 3, p: 2, gf: 11, gc: 8 },
+    { id: 'AUC', pj: 10, g: 3, e: 4, p: 3, gf: 10, gc: 9 },
+    { id: 'GCY', pj: 10, g: 4, e: 3, p: 3, gf: 9, gc: 10 },
+    { id: 'OVA', pj: 10, g: 3, e: 3, p: 4, gf: 14, gc: 15 },
+    { id: 'CUE', pj: 10, g: 4, e: 2, p: 4, gf: 11, gc: 11 },
+    { id: 'MUS', pj: 10, g: 3, e: 4, p: 3, gf: 11, gc: 11 },
+    { id: 'DLF', pj: 10, g: 3, e: 3, p: 4, gf: 4, gc: 5 },
+    { id: 'LDU', pj: 10, g: 4, e: 2, p: 4, gf: 9, gc: 9 },
+    { id: 'MAC', pj: 10, g: 3, e: 4, p: 3, gf: 9, gc: 10 },
+    { id: 'EME', pj: 10, g: 3, e: 2, p: 5, gf: 8, gc: 13 },
+    { id: 'TEC', pj: 10, g: 3, e: 2, p: 5, gf: 8, gc: 10 },
+    { id: 'LDN', pj: 10, g: 2, e: 4, p: 4, gf: 7, gc: 10 },
+    { id: 'LIB', pj: 10, g: 2, e: 4, p: 4, gf: 8, gc: 11 },
+    { id: 'MAN', pj: 10, g: 1, e: 1, p: 8, gf: 2, gc: 13 }
 ];
-// Nota: Emelec tiene -3 pts por sancion de la FEF
-// Datos actualizados - Liga Pro Ecuador 2026 - Fecha 9 (19 Abril 2026)
+// Nota: Emelec recupero los 3 pts (FEF devolvio sancion)
+// Datos actualizados - Liga Pro Ecuador 2026 - Fecha 10 (23 Abril 2026)
 
 const FALLBACK_GOLEADORES = [
     { nombre: 'Bryan Miranda', equipo: 'AUC', goles: 6 },
@@ -170,20 +170,29 @@ const RESULTADOS_PASADOS = [
     { jornada: 9, fecha: '2026-04-18', local: 'OVA', visitante: 'DLF', gl: 0, gv: 0 },
     { jornada: 9, fecha: '2026-04-19', local: 'MAN', visitante: 'CUE', gl: 0, gv: 1 },
     { jornada: 9, fecha: '2026-04-19', local: 'IDV', visitante: 'LDU', gl: 0, gv: 2 },
-    { jornada: 9, fecha: '2026-04-19', local: 'MAC', visitante: 'BSC', gl: 3, gv: 1 }
+    { jornada: 9, fecha: '2026-04-19', local: 'MAC', visitante: 'BSC', gl: 3, gv: 1 },
+    // Jornada 10
+    { jornada: 10, fecha: '2026-04-21', local: 'LIB', visitante: 'GCY', gl: 0, gv: 1 },
+    { jornada: 10, fecha: '2026-04-21', local: 'TEC', visitante: 'EME', gl: 0, gv: 1 },
+    { jornada: 10, fecha: '2026-04-22', local: 'LDN', visitante: 'MAN', gl: 3, gv: 0 },
+    { jornada: 10, fecha: '2026-04-22', local: 'DLF', visitante: 'IDV', gl: 0, gv: 1 },
+    { jornada: 10, fecha: '2026-04-22', local: 'CUE', visitante: 'OVA', gl: 1, gv: 3 },
+    { jornada: 10, fecha: '2026-04-22', local: 'BSC', visitante: 'MUS', gl: 2, gv: 1 },
+    { jornada: 10, fecha: '2026-04-22', local: 'LDU', visitante: 'AUC', gl: 0, gv: 0 },
+    { jornada: 10, fecha: '2026-04-23', local: 'UCA', visitante: 'MAC', gl: 4, gv: 0 }
 ];
 
 const JORNADA_PRODE = [
-    { jornada: 10, local: 'LIB', visitante: 'GCY', fecha: '2026-04-21' },
-    { jornada: 10, local: 'TEC', visitante: 'EME', fecha: '2026-04-21' },
-    { jornada: 10, local: 'LDN', visitante: 'MAN', fecha: '2026-04-22' },
-    { jornada: 10, local: 'DLF', visitante: 'IDV', fecha: '2026-04-22' },
-    { jornada: 10, local: 'CUE', visitante: 'OVA', fecha: '2026-04-22' },
-    { jornada: 10, local: 'BSC', visitante: 'MUS', fecha: '2026-04-22' },
-    { jornada: 10, local: 'LDU', visitante: 'AUC', fecha: '2026-04-22' },
-    { jornada: 10, local: 'UCA', visitante: 'MAC', fecha: '2026-04-23' }
+    { jornada: 11, local: 'MUS', visitante: 'CUE', fecha: '2026-04-25' },
+    { jornada: 11, local: 'IDV', visitante: 'LDN', fecha: '2026-04-25' },
+    { jornada: 11, local: 'EME', visitante: 'LDU', fecha: '2026-04-25' },
+    { jornada: 11, local: 'MAC', visitante: 'LIB', fecha: '2026-04-26' },
+    { jornada: 11, local: 'GCY', visitante: 'TEC', fecha: '2026-04-26' },
+    { jornada: 11, local: 'OVA', visitante: 'BSC', fecha: '2026-04-26' },
+    { jornada: 11, local: 'MAN', visitante: 'UCA', fecha: '2026-04-27' },
+    { jornada: 11, local: 'AUC', visitante: 'DLF', fecha: '2026-04-27' }
 ];
-const CURRENT_JORNADA = 10; // Jornada activa para el Prode
+const CURRENT_JORNADA = 11; // Jornada activa para el Prode
 
 // Orden de partidos que se uso en el Prode para cada jornada pasada
 // (necesario para mapear indices de predicciones a partidos reales)
@@ -197,22 +206,21 @@ const PRODE_MATCH_ORDER = {
         { local: 'MAN', visitante: 'CUE' },
         { local: 'IDV', visitante: 'LDU' },
         { local: 'MAC', visitante: 'BSC' }
+    ],
+    10: [
+        { local: 'LIB', visitante: 'GCY' },
+        { local: 'TEC', visitante: 'EME' },
+        { local: 'LDN', visitante: 'MAN' },
+        { local: 'DLF', visitante: 'IDV' },
+        { local: 'CUE', visitante: 'OVA' },
+        { local: 'BSC', visitante: 'MUS' },
+        { local: 'LDU', visitante: 'AUC' },
+        { local: 'UCA', visitante: 'MAC' }
     ]
 };
 
 // ===== CALENDARIO COMPLETO LIGAPRO 2026 =====
 const CALENDARIO_FECHAS = [
-    // Fecha 10 (21-23 Abril)
-    { fecha: 10, inicio: '2026-04-21', partidos: [
-        { local: 'LIB', visitante: 'GCY', dia: '2026-04-21' },
-        { local: 'TEC', visitante: 'EME', dia: '2026-04-21' },
-        { local: 'LDN', visitante: 'MAN', dia: '2026-04-22' },
-        { local: 'DLF', visitante: 'IDV', dia: '2026-04-22' },
-        { local: 'CUE', visitante: 'OVA', dia: '2026-04-22' },
-        { local: 'BSC', visitante: 'MUS', dia: '2026-04-22' },
-        { local: 'LDU', visitante: 'AUC', dia: '2026-04-22' },
-        { local: 'UCA', visitante: 'MAC', dia: '2026-04-23' }
-    ]},
     // Fecha 11 (25-27 Abril)
     { fecha: 11, inicio: '2026-04-25', partidos: [
         { local: 'MUS', visitante: 'CUE', dia: '2026-04-25' },
@@ -516,7 +524,7 @@ function useFallback() {
     goleadoresData = FALLBACK_GOLEADORES;
     asistenciasData = FALLBACK_ASISTENCIAS;
     renderAll();
-    showDataStatus('Datos actualizados - Fecha 9 (19 Abril)', true);
+    showDataStatus('Datos actualizados - Fecha 10 (23 Abril)', true);
 }
 
 function parseAPIStandings(raw) {
@@ -598,7 +606,7 @@ function renderStandings() {
 
     const teams = standingsData.map(t => ({
         ...t,
-        pts: t.id === 'EME' ? (t.g * 3 + t.e - 3) : (t.g * 3 + t.e),
+        pts: t.g * 3 + t.e,
         dg: t.gf - t.gc
     }));
     teams.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);
@@ -1147,7 +1155,7 @@ function renderCalendario() {
 
     let html = '';
 
-    for (let j = 1; j <= 9; j++) {
+    for (let j = 1; j <= 10; j++) {
         const matches = pastJornadas[j] || [];
         const firstDate = matches[0] ? matches[0].fecha : '';
         html += '<div class="calendario-jornada">';
@@ -1175,7 +1183,7 @@ function renderCalendario() {
     }
 
     CALENDARIO_FECHAS.forEach(cf => {
-        const isActive = cf.fecha === 10;
+        const isActive = cf.fecha === 11;
         html += '<div class="calendario-jornada">';
         html += '<div class="calendario-header' + (isActive ? ' activa' : '') + '" data-jornada="' + cf.fecha + '">';
         html += '<span class="calendario-fecha-num">Fecha ' + cf.fecha + '</span>';
@@ -1714,7 +1722,7 @@ async function calcLigaMemberPoints(liga) {
 
     // Get all completed jornadas (1-9)
     const completedJornadas = [];
-    for (let j = 1; j <= 9; j++) {
+    for (let j = 1; j <= 10; j++) {
         const matches = RESULTADOS_PASADOS.filter(r => r.jornada === j);
         if (matches.length > 0) completedJornadas.push({ jornada: j, matches });
     }
@@ -3279,7 +3287,7 @@ function previewStandingsAdmin() {
     // Calculate points and sort
     const teams = standings.map(t => ({
         ...t,
-        pts: t.id === 'EME' ? (t.g * 3 + t.e - 3) : (t.g * 3 + t.e),
+        pts: t.g * 3 + t.e,
         dg: t.gf - t.gc
     }));
     teams.sort((a, b) => b.pts - a.pts || b.dg - a.dg || b.gf - a.gf);

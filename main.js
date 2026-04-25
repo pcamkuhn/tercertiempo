@@ -451,6 +451,8 @@ let standingsData = null;
 let goleadoresData = null;
 let asistenciasData = null;
 let userAsistencias = [];
+let dynamicResultados = null; // Resultados cargados de Supabase
+let dynamicJornada = null; // Jornada activa del Prode desde config
 
 // ===== DOM READY =====
 document.addEventListener('DOMContentLoaded', () => {
@@ -501,30 +503,85 @@ function setCache(key, data) {
 async function loadData() {
     showDataStatus('Cargando datos...');
 
-    // Try cache first
-    let standings = getCached('standings');
-    let scorers = getCached('scorers');
-    let assists = getCached('assists');
+    // Try loading from Supabase first (resultados + config)
+    if (supabaseClient) {
+        try {
+            const [resResultados, resConfig] = await Promise.all([
+                supabaseClient.from('resultados').select('*').order('jornada').order('id'),
+                supabaseClient.from('config').select('*')
+            ]);
 
-    if (standings) {
-        standingsData = standings;
-        goleadoresData = scorers || FALLBACK_GOLEADORES;
-        asistenciasData = assists || FALLBACK_ASISTENCIAS;
-        renderAll();
-        showDataStatus('Datos en cache', true);
+            if (resResultados.data && resResultados.data.length > 0) {
+                dynamicResultados = resResultados.data;
+                // Build standings dynamically from all results
+                standingsData = buildStandingsFromResults(dynamicResultados);
+                goleadoresData = FALLBACK_GOLEADORES;
+                asistenciasData = FALLBACK_ASISTENCIAS;
+
+                const maxJ = Math.max(...dynamicResultados.map(r => r.jornada));
+                showDataStatus('Datos en vivo - Fecha ' + maxJ, true);
+            }
+
+            if (resConfig.data) {
+                const jornadaCfg = resConfig.data.find(c => c.key === 'current_jornada');
+                if (jornadaCfg) {
+                    dynamicJornada = parseInt(jornadaCfg.value);
+                }
+            }
+        } catch (e) {
+            console.warn('Error loading from Supabase, using fallback:', e);
+        }
     }
 
-    // Try API (disabled for 2026 - free plan only supports 2022-2024)
-    // Use fallback data directly since API doesn't support current season
+    // Fallback to hardcoded data if Supabase didn't work
     if (!standingsData) useFallback();
+
+    renderAll();
+}
+
+function buildStandingsFromResults(results) {
+    // Initialize all teams with 0
+    const teams = {};
+    Object.keys(EQUIPOS).forEach(id => {
+        teams[id] = { id, pj: 0, g: 0, e: 0, p: 0, gf: 0, gc: 0 };
+    });
+
+    // Process each result
+    results.forEach(r => {
+        const home = teams[r.local];
+        const away = teams[r.visitante];
+        if (!home || !away) return;
+
+        home.pj++; away.pj++;
+        home.gf += r.gl; home.gc += r.gv;
+        away.gf += r.gv; away.gc += r.gl;
+
+        if (r.gl > r.gv) { home.g++; away.p++; }
+        else if (r.gl < r.gv) { away.g++; home.p++; }
+        else { home.e++; away.e++; }
+    });
+
+    return Object.values(teams).filter(t => t.pj > 0);
 }
 
 function useFallback() {
     standingsData = FALLBACK_STANDINGS;
     goleadoresData = FALLBACK_GOLEADORES;
     asistenciasData = FALLBACK_ASISTENCIAS;
-    renderAll();
-    showDataStatus('Datos actualizados - Fecha 10 (23 Abril)', true);
+    showDataStatus('Datos fallback - Fecha 10', true);
+}
+
+// Get all results (dynamic from Supabase or fallback to hardcoded)
+function getAllResultados() {
+    if (dynamicResultados && dynamicResultados.length > 0) {
+        return dynamicResultados;
+    }
+    return RESULTADOS_PASADOS;
+}
+
+// Get active jornada (dynamic or fallback)
+function getActiveJornada() {
+    return dynamicJornada || CURRENT_JORNADA;
 }
 
 function parseAPIStandings(raw) {
@@ -707,7 +764,7 @@ function renderProde() {
             '<div class="prode-team away"><span>' + visitante.corto + '</span><div class="team-badge"><img src="' + visitante.logo + '" alt="' + visitante.corto + '"></div></div></div>';
     }).join('');
 
-    document.getElementById('prodeJornada').textContent = 'Jornada ' + CURRENT_JORNADA;
+    document.getElementById('prodeJornada').textContent = 'Jornada ' + getActiveJornada();
     document.getElementById('btnGuardarProde')?.addEventListener('click', guardarPronosticos);
     loadMyPronosticos();
     loadComunidadPronosticos();
@@ -752,7 +809,7 @@ async function savePronosticosDB(pronosticos) {
         });
         const record = {
             user_id: currentUser.id,
-            jornada: CURRENT_JORNADA,
+            jornada: getActiveJornada(),
             marcadores: marcadores,
             updated_at: new Date().toISOString()
         };
@@ -779,7 +836,7 @@ async function loadMyPronosticos() {
         const { data } = await supabaseClient.from('pronosticos')
             .select('marcadores')
             .eq('user_id', currentUser.id)
-            .eq('jornada', CURRENT_JORNADA)
+            .eq('jornada', getActiveJornada())
             .single();
         if (data && data.marcadores) {
             Object.entries(data.marcadores).forEach(([idx, scores]) => {
@@ -799,7 +856,7 @@ async function loadComunidadPronosticos() {
     try {
         const { data } = await supabaseClient.from('pronosticos')
             .select('user_id, marcadores')
-            .eq('jornada', CURRENT_JORNADA);
+            .eq('jornada', getActiveJornada());
         if (!data || data.length === 0) {
             container.innerHTML = '<div class="ranking-empty">Aun nadie ha enviado pronosticos para esta jornada.</div>';
             return;
@@ -913,7 +970,7 @@ async function loadProdeJornadaResults(jornada) {
     if (!matchOrder) { container.innerHTML = '<div class="ranking-empty">No hay datos del Prode para esta jornada.</div>'; return; }
 
     // Get real results
-    const realResults = RESULTADOS_PASADOS.filter(r => r.jornada === jornada);
+    const realResults = getAllResultados().filter(r => r.jornada === jornada);
 
     // Map match order indices to real results
     const matchResults = matchOrder.map(m => {
@@ -1088,7 +1145,7 @@ async function loadProdeGlobalRanking(completedJornadas) {
             const matchOrder = PRODE_MATCH_ORDER[pred.jornada];
             if (!matchOrder) return;
 
-            const realResults = RESULTADOS_PASADOS.filter(r => r.jornada === pred.jornada);
+            const realResults = getAllResultados().filter(r => r.jornada === pred.jornada);
             const marcadores = pred.marcadores || {};
             let hadPreds = false;
 
@@ -1147,15 +1204,17 @@ function renderCalendario() {
     const container = document.getElementById('calendarioContainer');
     if (!container) return;
 
+    const allResults = getAllResultados();
     const pastJornadas = {};
-    RESULTADOS_PASADOS.forEach(r => {
+    allResults.forEach(r => {
         if (!pastJornadas[r.jornada]) pastJornadas[r.jornada] = [];
         pastJornadas[r.jornada].push(r);
     });
 
     let html = '';
 
-    for (let j = 1; j <= 10; j++) {
+    const maxCompletedJ = Object.keys(pastJornadas).map(Number).sort((a, b) => a - b);
+    maxCompletedJ.forEach(j => {
         const matches = pastJornadas[j] || [];
         const firstDate = matches[0] ? matches[0].fecha : '';
         html += '<div class="calendario-jornada">';
@@ -1180,10 +1239,13 @@ function renderCalendario() {
             html += '</div>';
         });
         html += '</div></div>';
-    }
+    });
 
     CALENDARIO_FECHAS.forEach(cf => {
-        const isActive = cf.fecha === 11;
+        // Skip if already in completed results
+        if (pastJornadas[cf.fecha]) return;
+        const activeJ = getActiveJornada();
+        const isActive = cf.fecha === activeJ;
         html += '<div class="calendario-jornada">';
         html += '<div class="calendario-header' + (isActive ? ' activa' : '') + '" data-jornada="' + cf.fecha + '">';
         html += '<span class="calendario-fecha-num">Fecha ' + cf.fecha + '</span>';
@@ -1720,12 +1782,14 @@ async function loadLigaMembers(liga) {
 async function calcLigaMemberPoints(liga) {
     if (!liga._members || liga._members.length === 0) return;
 
-    // Get all completed jornadas (1-9)
+    // Get all completed jornadas dynamically
+    const allResults = getAllResultados();
     const completedJornadas = [];
-    for (let j = 1; j <= 10; j++) {
-        const matches = RESULTADOS_PASADOS.filter(r => r.jornada === j);
+    const jornadas = [...new Set(allResults.map(r => r.jornada))].sort((a, b) => a - b);
+    jornadas.forEach(j => {
+        const matches = allResults.filter(r => r.jornada === j);
         if (matches.length > 0) completedJornadas.push({ jornada: j, matches });
-    }
+    });
 
     // Get pronosticos for all members of this liga
     if (supabaseClient && !String(liga.id).startsWith('local_')) {
@@ -1812,13 +1876,14 @@ function renderLigaRanking(container) {
 }
 
 function renderLigaJornadas(container) {
-    // Get all jornadas (1-9 completed + 10 active)
-    const maxJornada = CURRENT_JORNADA;
+    const allResults = getAllResultados();
+    const activeJ = getActiveJornada();
+    const maxJornada = activeJ;
     let html = '<div class="liga-jornadas">';
 
     for (let j = maxJornada; j >= 1; j--) {
-        const matches = RESULTADOS_PASADOS.filter(r => r.jornada === j);
-        const isActive = j === CURRENT_JORNADA;
+        const matches = allResults.filter(r => r.jornada === j);
+        const isActive = j === activeJ;
         const isFuture = matches.length === 0 && isActive;
 
         html += '<div class="jornada-block' + (isActive ? ' jornada-active' : '') + '">';
@@ -1886,10 +1951,10 @@ function renderLigaJornadas(container) {
     });
 
     // Auto-expand active jornada
-    const activeBody = document.getElementById('jornadaBody' + CURRENT_JORNADA);
+    const activeBody = document.getElementById('jornadaBody' + activeJ);
     if (activeBody) {
         activeBody.classList.remove('hidden');
-        const hdr = container.querySelector('[data-jornada="' + CURRENT_JORNADA + '"] .jornada-toggle');
+        const hdr = container.querySelector('[data-jornada="' + activeJ + '"] .jornada-toggle');
         if (hdr) hdr.textContent = '\u25B2';
     }
 }
@@ -1989,7 +2054,7 @@ function renderPastMatches() {
     if (nameSpan) nameSpan.textContent = eq ? eq.nombre : miEquipo;
 
     // Filter matches involving my team
-    const misPartidos = RESULTADOS_PASADOS.filter(r => r.local === miEquipo || r.visitante === miEquipo);
+    const misPartidos = getAllResultados().filter(r => r.local === miEquipo || r.visitante === miEquipo);
     const registeredIds = new Set(userAsistencias.map(a => a.jornada + '-' + a.fecha));
 
     if (misPartidos.length === 0) {
@@ -3117,25 +3182,28 @@ function initAdminPanel() {
     const select = document.getElementById('adminJornadaSelect');
     if (!select) return;
 
-    // Populate jornada options (next fechas from CALENDARIO_FECHAS)
+    // Populate jornada options - all 30 jornadas
     select.innerHTML = '<option value="">Selecciona jornada</option>';
-    CALENDARIO_FECHAS.forEach(cf => {
-        const opt = document.createElement('option');
-        opt.value = cf.fecha;
-        opt.textContent = 'Fecha ' + cf.fecha + ' (' + formatCalDate(cf.inicio) + ')';
-        select.appendChild(opt);
-    });
+    const allResults = getAllResultados();
+    const completedJornadas = [...new Set(allResults.map(r => r.jornada))].sort((a, b) => a - b);
 
-    // Also add completed jornadas for editing
-    const maxCompleted = Math.max(...RESULTADOS_PASADOS.map(r => r.jornada));
-    for (let j = maxCompleted; j >= 1; j--) {
-        const matches = RESULTADOS_PASADOS.filter(r => r.jornada === j);
-        if (matches.length > 0) {
+    // Future jornadas from CALENDARIO_FECHAS
+    CALENDARIO_FECHAS.forEach(cf => {
+        if (!completedJornadas.includes(cf.fecha)) {
             const opt = document.createElement('option');
-            opt.value = j;
-            opt.textContent = 'Fecha ' + j + ' (completada)';
+            opt.value = cf.fecha;
+            opt.textContent = 'Fecha ' + cf.fecha + ' (' + formatCalDate(cf.inicio) + ')';
             select.appendChild(opt);
         }
+    });
+
+    // Completed jornadas (most recent first)
+    for (let j = completedJornadas.length - 1; j >= 0; j--) {
+        const jNum = completedJornadas[j];
+        const opt = document.createElement('option');
+        opt.value = jNum;
+        opt.textContent = 'Fecha ' + jNum + ' (completada - editar)';
+        select.appendChild(opt);
     }
 
     select.addEventListener('change', () => {
@@ -3147,17 +3215,58 @@ function initAdminPanel() {
     document.getElementById('btnGuardarResultados')?.addEventListener('click', guardarResultadosAdmin);
     document.getElementById('btnPreviewStandings')?.addEventListener('click', previewStandingsAdmin);
 
-    // Show current info
-    const info = document.getElementById('adminCurrentInfo');
-    if (info) {
-        const totalResults = RESULTADOS_PASADOS.length;
-        const maxJ = Math.max(...RESULTADOS_PASADOS.map(r => r.jornada));
-        const totalTeams = FALLBACK_STANDINGS.length;
-        info.innerHTML = 'Jornadas con resultados: <strong>1 a ' + maxJ + '</strong><br>' +
-            'Total partidos registrados: <strong>' + totalResults + '</strong><br>' +
-            'Equipos en tabla: <strong>' + totalTeams + '</strong><br>' +
-            'Jornada activa del Prode: <strong>Fecha ' + CURRENT_JORNADA + '</strong>';
+    // Jornada activa del Prode selector
+    const prodeSelect = document.getElementById('adminProdeJornada');
+    if (prodeSelect) {
+        prodeSelect.innerHTML = '';
+        for (let j = 1; j <= 30; j++) {
+            const opt = document.createElement('option');
+            opt.value = j;
+            opt.textContent = 'Fecha ' + j;
+            if (j === getActiveJornada()) opt.selected = true;
+            prodeSelect.appendChild(opt);
+        }
     }
+    document.getElementById('btnCambiarJornada')?.addEventListener('click', cambiarJornadaActiva);
+
+    // Show current info
+    refreshAdminInfo();
+}
+
+async function cambiarJornadaActiva() {
+    if (!currentUser || currentUser.id !== ADMIN_USER_ID || !supabaseClient) return;
+    const newJ = parseInt(document.getElementById('adminProdeJornada').value);
+    if (isNaN(newJ)) return;
+
+    const statusEl = document.getElementById('adminJornadaStatus');
+    try {
+        const { error } = await supabaseClient.from('config')
+            .upsert({ key: 'current_jornada', value: String(newJ), updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        if (error) throw error;
+
+        dynamicJornada = newJ;
+        renderAll();
+        refreshAdminInfo();
+        statusEl.innerHTML = '<span style="color:#27ae60;">✓ Jornada activa cambiada a Fecha ' + newJ + '</span>';
+        showToast('Jornada del Prode actualizada a Fecha ' + newJ);
+    } catch (e) {
+        statusEl.innerHTML = '<span style="color:#e74c3c;">Error: ' + (e.message || 'No se pudo actualizar') + '</span>';
+    }
+}
+
+function refreshAdminInfo() {
+    const info = document.getElementById('adminCurrentInfo');
+    if (!info) return;
+    const allResults = getAllResultados();
+    const totalResults = allResults.length;
+    const jornadas = [...new Set(allResults.map(r => r.jornada))];
+    const maxJ = jornadas.length > 0 ? Math.max(...jornadas) : 0;
+    const activeJ = getActiveJornada();
+    const source = dynamicResultados ? '🟢 Supabase (en vivo)' : '🟡 Datos locales (fallback)';
+    info.innerHTML = 'Fuente de datos: <strong>' + source + '</strong><br>' +
+        'Jornadas con resultados: <strong>1 a ' + maxJ + '</strong><br>' +
+        'Total partidos registrados: <strong>' + totalResults + '</strong><br>' +
+        'Jornada activa del Prode: <strong>Fecha ' + activeJ + '</strong>';
 }
 
 function renderAdminMatches(jornada) {
@@ -3166,8 +3275,8 @@ function renderAdminMatches(jornada) {
 
     // Check if it's a future jornada (from CALENDARIO_FECHAS)
     const calFecha = CALENDARIO_FECHAS.find(cf => cf.fecha === jornada);
-    // Check if it's a completed jornada (from RESULTADOS_PASADOS)
-    const completedMatches = RESULTADOS_PASADOS.filter(r => r.jornada === jornada);
+    // Check if it's a completed jornada
+    const completedMatches = getAllResultados().filter(r => r.jornada === jornada);
 
     let matches = [];
     if (completedMatches.length > 0) {
@@ -3205,8 +3314,10 @@ function renderAdminMatches(jornada) {
     document.getElementById('btnGuardarResultados').disabled = false;
 }
 
-function guardarResultadosAdmin() {
+async function guardarResultadosAdmin() {
     if (!currentUser || currentUser.id !== ADMIN_USER_ID) return;
+    if (!supabaseClient) { showToast('Error: Supabase no disponible'); return; }
+
     const jornada = parseInt(document.getElementById('adminJornadaSelect').value);
     if (isNaN(jornada)) { showToast('Selecciona una jornada'); return; }
 
@@ -3227,62 +3338,82 @@ function guardarResultadosAdmin() {
 
     if (!allComplete) { showToast('Completa todos los marcadores'); return; }
 
-    // Generate the code snippet to add to RESULTADOS_PASADOS
-    const calFecha = CALENDARIO_FECHAS.find(cf => cf.fecha === jornada);
-    let codeSnippet = '    // Jornada ' + jornada + '\n';
-    results.forEach((r, i) => {
-        const fecha = calFecha ? calFecha.partidos[i]?.dia || calFecha.inicio : '2026-01-01';
-        codeSnippet += "    { jornada: " + r.jornada + ", fecha: '" + fecha + "', local: '" + r.local + "', visitante: '" + r.visitante + "', gl: " + r.gl + ", gv: " + r.gv + " },\n";
-    });
-
-    // Show status with the generated code
     const status = document.getElementById('adminStatus');
-    status.innerHTML = '<div style="background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:12px; margin-top:8px;">' +
-        '<p style="font-size:0.85rem; font-weight:600; margin-bottom:8px;">Resultados guardados localmente. Codigo para RESULTADOS_PASADOS:</p>' +
-        '<pre style="font-size:0.7rem; overflow-x:auto; white-space:pre-wrap; background:#1a1a2e; color:#0f0; padding:8px; border-radius:4px;">' + escapeHtml(codeSnippet) + '</pre>' +
-        '<p style="font-size:0.75rem; color:var(--accent); margin-top:8px;">Los resultados se usaran para la vista previa. Para hacerlos permanentes, se deben agregar al codigo.</p></div>';
+    status.innerHTML = '<p style="color:var(--accent);">Guardando en Supabase...</p>';
 
-    // Store temporarily for preview
-    window._adminTempResults = results;
-    showToast('Resultados guardados para vista previa');
+    try {
+        // Get fecha from calendario
+        const calFecha = CALENDARIO_FECHAS.find(cf => cf.fecha === jornada);
+
+        // Upsert each result to Supabase
+        const records = results.map((r, i) => ({
+            jornada: r.jornada,
+            fecha: calFecha ? (calFecha.partidos[i]?.dia || calFecha.inicio) : null,
+            local: r.local,
+            visitante: r.visitante,
+            gl: r.gl,
+            gv: r.gv
+        }));
+
+        const { error } = await supabaseClient.from('resultados')
+            .upsert(records, { onConflict: 'jornada,local,visitante' });
+
+        if (error) throw error;
+
+        // Update dynamicResultados and rebuild standings
+        const { data: freshResults } = await supabaseClient.from('resultados')
+            .select('*').order('jornada').order('id');
+        if (freshResults) {
+            dynamicResultados = freshResults;
+            standingsData = buildStandingsFromResults(dynamicResultados);
+        }
+
+        // Refresh the app
+        renderAll();
+        renderCalendario();
+        refreshAdminInfo();
+
+        const maxJ = Math.max(...dynamicResultados.map(r => r.jornada));
+        showDataStatus('Datos en vivo - Fecha ' + maxJ, true);
+
+        status.innerHTML = '<div style="background:rgba(46,204,113,0.1); border:1px solid rgba(46,204,113,0.3); border-radius:8px; padding:12px; margin-top:8px;">' +
+            '<p style="font-size:0.85rem; font-weight:600; color:#27ae60;">✓ Resultados guardados en Supabase</p>' +
+            '<p style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">La tabla, calendario y prode se actualizaron automaticamente para todos los usuarios.</p></div>';
+
+        showToast('Resultados guardados ✓ Tabla actualizada');
+    } catch (e) {
+        console.error('Error saving results:', e);
+        status.innerHTML = '<p style="color:#e74c3c; font-size:0.85rem;">Error: ' + (e.message || 'No se pudo guardar') + '</p>';
+        showToast('Error al guardar: ' + (e.message || 'intenta de nuevo'));
+    }
 }
 
 function previewStandingsAdmin() {
-    const tempResults = window._adminTempResults;
     const previewCard = document.getElementById('adminPreviewCard');
     const previewTable = document.getElementById('adminPreviewTable');
     if (!previewCard || !previewTable) return;
 
-    // Build standings from FALLBACK_STANDINGS + any temp results
-    let standings = JSON.parse(JSON.stringify(FALLBACK_STANDINGS));
+    // Build from current results + what's in the form
+    const allResults = getAllResultados();
+    const jornada = parseInt(document.getElementById('adminJornadaSelect').value);
+    let previewResults = [...allResults];
 
-    if (tempResults && tempResults.length > 0) {
-        // Check if these are results for a new jornada (not already in RESULTADOS_PASADOS)
-        const existingJornadas = [...new Set(RESULTADOS_PASADOS.map(r => r.jornada))];
-        const tempJornada = tempResults[0].jornada;
-
-        if (!existingJornadas.includes(tempJornada)) {
-            // Apply temp results to standings
-            tempResults.forEach(r => {
-                const home = standings.find(t => t.id === r.local);
-                const away = standings.find(t => t.id === r.visitante);
-                if (home) {
-                    home.pj++;
-                    home.gf += r.gl; home.gc += r.gv;
-                    if (r.gl > r.gv) home.g++;
-                    else if (r.gl === r.gv) home.e++;
-                    else home.p++;
-                }
-                if (away) {
-                    away.pj++;
-                    away.gf += r.gv; away.gc += r.gl;
-                    if (r.gv > r.gl) away.g++;
-                    else if (r.gv === r.gl) away.e++;
-                    else away.p++;
+    // Add form data if it's a new jornada
+    if (!isNaN(jornada)) {
+        const existingJornadas = [...new Set(allResults.map(r => r.jornada))];
+        if (!existingJornadas.includes(jornada)) {
+            const rows = document.querySelectorAll('.admin-match-row');
+            rows.forEach(row => {
+                const gl = row.querySelector('[data-side="local"]').value;
+                const gv = row.querySelector('[data-side="visitante"]').value;
+                if (gl !== '' && gv !== '') {
+                    previewResults.push({ jornada, local: row.dataset.local, visitante: row.dataset.visitante, gl: parseInt(gl), gv: parseInt(gv) });
                 }
             });
         }
     }
+
+    const standings = buildStandingsFromResults(previewResults);
 
     // Calculate points and sort
     const teams = standings.map(t => ({

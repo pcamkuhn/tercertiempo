@@ -635,9 +635,20 @@
                     <div id="adminPreviewTable"></div>
                 </div>
 
-                <!-- Instrucciones para actualizar codigo -->
+                <!-- Cambiar jornada activa del Prode -->
                 <div class="perfil-card" style="margin-bottom:16px">
-                    <h4>Datos Actuales</h4>
+                    <h4>Jornada Activa del Prode</h4>
+                    <p style="font-size:0.8rem; color:var(--text-secondary); margin-bottom:8px">Cambia la jornada para la que los usuarios envian predicciones.</p>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <select class="input-field" id="adminProdeJornada" style="max-width:200px;"></select>
+                        <button class="btn btn-primary btn-sm" id="btnCambiarJornada">Actualizar</button>
+                    </div>
+                    <div id="adminJornadaStatus" style="margin-top:6px; font-size:0.8rem;"></div>
+                </div>
+
+                <!-- Estado actual -->
+                <div class="perfil-card" style="margin-bottom:16px">
+                    <h4>Estado del Sistema</h4>
                     <p style="font-size:0.8rem; color:var(--text-secondary);" id="adminCurrentInfo">Cargando...</p>
                 </div>
             </div>

@@ -579,9 +579,42 @@ function getAllResultados() {
     return RESULTADOS_PASADOS;
 }
 
+// Get match order for a completed prode jornada (for history comparison)
+function getProdeMatchOrder(jornada) {
+    // First check hardcoded order (for jornadas where order differed from calendar)
+    if (PRODE_MATCH_ORDER[jornada]) return PRODE_MATCH_ORDER[jornada];
+    // Fallback: use CALENDARIO_FECHAS order
+    const fechaCal = CALENDARIO_FECHAS.find(f => f.fecha === jornada);
+    if (fechaCal && fechaCal.partidos) {
+        return fechaCal.partidos.map(p => ({ local: p.local, visitante: p.visitante }));
+    }
+    return null;
+}
+
 // Get active jornada (dynamic or fallback)
 function getActiveJornada() {
     return dynamicJornada || CURRENT_JORNADA;
+}
+
+// Get matches for the active Prode jornada (dynamic from CALENDARIO_FECHAS)
+function getProdeMatches() {
+    const activeJ = getActiveJornada();
+    // First check CALENDARIO_FECHAS
+    const fechaCal = CALENDARIO_FECHAS.find(f => f.fecha === activeJ);
+    if (fechaCal && fechaCal.partidos) {
+        return fechaCal.partidos.map(p => ({
+            jornada: activeJ,
+            local: p.local,
+            visitante: p.visitante,
+            fecha: p.dia
+        }));
+    }
+    // Fallback to JORNADA_PRODE if it matches
+    if (JORNADA_PRODE.length > 0 && JORNADA_PRODE[0].jornada === activeJ) {
+        return JORNADA_PRODE;
+    }
+    // Last resort: return empty
+    return [];
 }
 
 function parseAPIStandings(raw) {
@@ -751,7 +784,8 @@ function renderProde() {
     const grid = document.getElementById('prodeGrid');
     if (!grid) return;
 
-    grid.innerHTML = JORNADA_PRODE.map((match, i) => {
+    const prodeMatches = getProdeMatches();
+    grid.innerHTML = prodeMatches.map((match, i) => {
         const local = EQUIPOS[match.local] || { svg: '', corto: match.local };
         const visitante = EQUIPOS[match.visitante] || { svg: '', corto: match.visitante };
         return '<div class="prode-match">' +
@@ -900,7 +934,8 @@ async function loadComunidadPronosticos() {
             html += '</div>';
             html += '<div class="comunidad-user-preds">';
             Object.entries(marcadores).sort((a, b) => parseInt(a[0]) - parseInt(b[0])).forEach(([idx, scores]) => {
-                const match = JORNADA_PRODE[parseInt(idx)];
+                const prodeMatchesCom = getProdeMatches();
+                const match = prodeMatchesCom[parseInt(idx)];
                 if (!match) return;
                 const eqL = EQUIPOS[match.local] || { corto: match.local, logo: '' };
                 const eqV = EQUIPOS[match.visitante] || { corto: match.visitante, logo: '' };
@@ -927,8 +962,11 @@ async function loadProdeHistory() {
     const tabsContainer = document.getElementById('prodeHistoryTabs');
     if (!tabsContainer) return;
 
-    // Find jornadas that have both results AND prode match order
-    const completedProdeJornadas = Object.keys(PRODE_MATCH_ORDER).map(Number).sort((a, b) => b - a);
+    // Find completed jornadas: those with results in DB that are before the active jornada
+    const allResults = getAllResultados();
+    const completedJornadaSet = new Set(allResults.map(r => typeof r.jornada === 'number' ? r.jornada : parseInt(r.jornada)));
+    const activeJ = getActiveJornada();
+    const completedProdeJornadas = [...completedJornadaSet].filter(j => j < activeJ).sort((a, b) => b - a);
 
     if (completedProdeJornadas.length === 0) {
         tabsContainer.innerHTML = '';
@@ -966,7 +1004,7 @@ async function loadProdeJornadaResults(jornada) {
 
     container.innerHTML = '<div class="ranking-empty">Cargando resultados...</div>';
 
-    const matchOrder = PRODE_MATCH_ORDER[jornada];
+    const matchOrder = getProdeMatchOrder(jornada);
     if (!matchOrder) { container.innerHTML = '<div class="ranking-empty">No hay datos del Prode para esta jornada.</div>'; return; }
 
     // Get real results
@@ -1142,7 +1180,7 @@ async function loadProdeGlobalRanking(completedJornadas) {
                 userTotals[pred.user_id] = { nombre: info.nombre, equipo: info.equipo, totalPts: 0, exactos: 0, aciertos: 0, jornadas: 0 };
             }
 
-            const matchOrder = PRODE_MATCH_ORDER[pred.jornada];
+            const matchOrder = getProdeMatchOrder(pred.jornada);
             if (!matchOrder) return;
 
             const realResults = getAllResultados().filter(r => r.jornada === pred.jornada);
@@ -1895,7 +1933,7 @@ function renderLigaJornadas(container) {
         if (isActive) {
             // Jornada activa - show prode matches
             html += '<div class="jornada-matches">';
-            JORNADA_PRODE.forEach(m => {
+            getProdeMatches().forEach(m => {
                 const loc = EQUIPOS[m.local] || { corto: m.local, logo: '' };
                 const vis = EQUIPOS[m.visitante] || { corto: m.visitante, logo: '' };
                 html += '<div class="jornada-match">' +

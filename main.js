@@ -537,6 +537,11 @@ async function loadData() {
     if (!standingsData) useFallback();
 
     renderAll();
+
+    // Re-init admin panel if admin is logged in (so it picks up fresh Supabase data)
+    if (currentUser && currentUser.id === ADMIN_USER_ID) {
+        initAdminPanel();
+    }
 }
 
 function buildStandingsFromResults(results) {
@@ -962,11 +967,13 @@ async function loadProdeHistory() {
     const tabsContainer = document.getElementById('prodeHistoryTabs');
     if (!tabsContainer) return;
 
-    // Find completed jornadas: those with results in DB that are before the active jornada
+    // Find completed jornadas that had Prode (with match order available)
     const allResults = getAllResultados();
     const completedJornadaSet = new Set(allResults.map(r => typeof r.jornada === 'number' ? r.jornada : parseInt(r.jornada)));
     const activeJ = getActiveJornada();
-    const completedProdeJornadas = [...completedJornadaSet].filter(j => j < activeJ).sort((a, b) => b - a);
+    const completedProdeJornadas = [...completedJornadaSet]
+        .filter(j => j < activeJ && getProdeMatchOrder(j) !== null)
+        .sort((a, b) => b - a);
 
     if (completedProdeJornadas.length === 0) {
         tabsContainer.innerHTML = '';

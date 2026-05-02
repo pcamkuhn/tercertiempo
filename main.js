@@ -512,7 +512,13 @@ async function loadData() {
             ]);
 
             if (resResultados.data && resResultados.data.length > 0) {
-                dynamicResultados = resResultados.data;
+                // Normalize types from Supabase (jornada, gl, gv must be numbers)
+                dynamicResultados = resResultados.data.map(r => ({
+                    ...r,
+                    jornada: parseInt(r.jornada) || 0,
+                    gl: parseInt(r.gl) || 0,
+                    gv: parseInt(r.gv) || 0
+                }));
                 // Build standings dynamically from all results
                 standingsData = buildStandingsFromResults(dynamicResultados);
                 goleadoresData = FALLBACK_GOLEADORES;
@@ -3375,6 +3381,7 @@ async function guardarResultadosAdmin() {
         const visitante = row.dataset.visitante;
         const glInput = row.querySelector('[data-side="local"]');
         const gvInput = row.querySelector('[data-side="visitante"]');
+        if (!glInput || !gvInput) return;
         const gl = glInput.value;
         const gv = gvInput.value;
         if (gl === '' || gv === '') allComplete = false;
@@ -3409,7 +3416,12 @@ async function guardarResultadosAdmin() {
         const { data: freshResults } = await supabaseClient.from('resultados')
             .select('*').order('jornada').order('id');
         if (freshResults) {
-            dynamicResultados = freshResults;
+            dynamicResultados = freshResults.map(r => ({
+                ...r,
+                jornada: parseInt(r.jornada) || 0,
+                gl: parseInt(r.gl) || 0,
+                gv: parseInt(r.gv) || 0
+            }));
             standingsData = buildStandingsFromResults(dynamicResultados);
         }
 

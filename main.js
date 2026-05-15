@@ -1362,6 +1362,10 @@ function initAuth() {
     document.getElementById('authModal')?.addEventListener('click', (e) => {
         if (e.target.id === 'authModal') closeAuthModal();
     });
+    document.getElementById('btnForgotPassword')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        handleForgotPassword();
+    });
 
     // selectEquipo options are now in the HTML (including Hincha neutral and Otro equipo)
 }
@@ -1376,9 +1380,59 @@ function openAuthModal(mode) {
     if (mode === 'login') document.getElementById('equipoManualGroup').style.display = 'none';
     document.getElementById('modalSwitchText').textContent = mode === 'login' ? 'No tienes cuenta?' : 'Ya tienes cuenta?';
     document.getElementById('modalSwitchLink').textContent = mode === 'login' ? 'Registrate' : 'Inicia sesion';
+    const forgotLink = document.getElementById('forgotPasswordLink');
+    if (forgotLink) forgotLink.style.display = mode === 'login' ? 'block' : 'none';
     m.classList.remove('hidden');
 }
 function closeAuthModal() { document.getElementById('authModal')?.classList.add('hidden'); }
+
+async function handleForgotPassword() {
+    const email = document.getElementById('inputEmail').value;
+    if (!email) { showToast('Escribe tu email primero'); return; }
+    if (!supabaseClient) { showToast('No disponible en modo demo'); return; }
+
+    try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin
+        });
+        if (error) throw error;
+        showToast('Te enviamos un link para restablecer tu contrasena. Revisa tu email (y spam).');
+        closeAuthModal();
+    } catch (e) {
+        showToast('Error: ' + (e.message || 'No se pudo enviar el email'));
+    }
+}
+
+function showResetPasswordModal() {
+    // Create a simple modal for new password
+    let modal = document.getElementById('resetPasswordModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'resetPasswordModal';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;';
+        modal.innerHTML = '<div style="background:var(--bg-card,#1a1a2e);border-radius:16px;padding:24px;max-width:380px;width:90%;color:var(--text-primary,#fff);">' +
+            '<h3 style="margin:0 0 16px;text-align:center;">Nueva Contrasena</h3>' +
+            '<p style="font-size:0.85rem;color:var(--text-secondary,#aaa);margin-bottom:16px;text-align:center;">Escribe tu nueva contrasena</p>' +
+            '<input type="password" id="newPasswordInput" placeholder="Nueva contrasena (min 6 caracteres)" ' +
+            'style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:0.9rem;margin-bottom:12px;box-sizing:border-box;">' +
+            '<button id="btnConfirmReset" style="width:100%;padding:10px;border-radius:8px;border:none;background:var(--accent,#f39c12);color:#fff;font-weight:600;font-size:0.9rem;cursor:pointer;">Cambiar Contrasena</button>' +
+            '</div>';
+        document.body.appendChild(modal);
+    }
+    modal.style.display = 'flex';
+    document.getElementById('btnConfirmReset').onclick = async function() {
+        const newPass = document.getElementById('newPasswordInput').value;
+        if (!newPass || newPass.length < 6) { showToast('La contrasena debe tener al menos 6 caracteres'); return; }
+        try {
+            const { error } = await supabaseClient.auth.updateUser({ password: newPass });
+            if (error) throw error;
+            modal.style.display = 'none';
+            showToast('Contrasena actualizada exitosamente. Ya puedes usar tu nueva contrasena.');
+        } catch (e) {
+            showToast('Error: ' + (e.message || 'No se pudo actualizar'));
+        }
+    };
+}
 
 async function handleAuth(e) {
     e.preventDefault();
@@ -1494,6 +1548,7 @@ async function checkSession() {
     try {
         // Handle email confirmation callback (token in URL hash)
         const hash = window.location.hash;
+        const isRecovery = hash && hash.includes('type=recovery');
         if (hash && (hash.includes('access_token') || hash.includes('type=signup') || hash.includes('type=recovery'))) {
             // Supabase client auto-processes the hash on init, just wait a moment
             await new Promise(r => setTimeout(r, 500));
@@ -1501,6 +1556,10 @@ async function checkSession() {
             if (window.history.replaceState) {
                 window.history.replaceState(null, '', window.location.pathname);
             }
+        }
+        // If this was a password recovery callback, show the reset modal
+        if (isRecovery) {
+            showResetPasswordModal();
         }
         const { data: { session } } = await supabaseClient.auth.getSession();
         if (session?.user) {
